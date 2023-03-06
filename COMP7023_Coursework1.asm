@@ -58,12 +58,19 @@ SECTION .data
 	str_prompt_staff_year DB "Which year did they join", 10, 0
 	str_prompt_staff_mail DB "What's their email address?", 10, 0
 	
-	str_staff_dept_0 DB "Park Keeper", 10, 0
-	str_staff_dept_1 DB "Gift Shop", 10, 0
-	str_staff_dept_2 DB "Cafe", 10, 0
-	str_staff_dept_3 DB "Error!", 10, 0
+	str_staff_dept_0 DB "Park Keeper", 0
+	str_staff_dept_1 DB "Gift Shop", 0
+	str_staff_dept_2 DB "Cafe", 0
+	str_staff_dept_ERR DB "Error!", 0
 	
 	str_number_staff DB "Total number of Staff: ", 10, 0
+	
+	
+	
+	str_disp_staff_name DB "Name: ", 0
+	str_disp_staff_id DB "ID: ", 0
+	str_disp_staff_salary DB "Salary: ", 0
+	str_disp_staff_salary_currency DB " GBP", 0
 	
 	
 	; messages to show user when adding a badger
@@ -85,7 +92,7 @@ SECTION .data
 	str_badg_home_0 DB "Settfield", 10, 0
 	str_badg_home_1 DB "Badgerton", 10, 0
 	str_badg_home_2 DB "Stripeville", 10, 0
-	str_badg_home_3 DB "Error!", 10, 0
+	str_badg_home_ERR DB "Error!", 10, 0
 	
 	
 	; Errors for badger and staff ID format
@@ -105,7 +112,7 @@ SECTION .data
 	; 64 B for surname
 	size_staff_id EQU 9 ; p + 7 digits + NULL
 	size_dept_id EQU 1 ; 1 Byte
-	size_salary EQU 4 ; 4 Btyes
+	size_salary EQU 8 ; 8 Btyes
 	size_year EQU 2 ; 2 Bytes
 	; 64 B for email
 	
@@ -133,6 +140,8 @@ SECTION .data
 	; 9B staff ID
 	
 	size_badg_record EQU size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 88B
+	
+	badg_keeper_id_offset EQU size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
 	max_number_staff EQU 100
 	max_number_badg EQU 500
@@ -229,8 +238,8 @@ ADD_STAFF_MEMBER:
 		CALL print_string_new
 		CALL read_uint_new
 		MOV RSI, RAX
-		MOV DWORD[RCX], EAX ;copy 4B number into record
-		ADD RCX, size_salary ;4B
+		MOV QWORD[RCX], RAX ;copy 8B number into record
+		ADD RCX, size_salary ;8B
 	.STAFF_MEMBER_READ_YEAR_JOIN:
 		; Staff member year of joining
 		MOV RDI, str_prompt_staff_year
@@ -294,24 +303,29 @@ LIST_STAFF:
 	.START_PRINT_STAFF_LOOP:
 		CMP RCX, 0
 		JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
+		
 		.PRINT_STAFF_NAME:
+			MOV RDI, str_disp_staff_name
+			CALL print_string_new
 			MOV RDI, RSI ; put the pointer to the current record in RDI, to pass to the print_string_new function
 			CALL print_string_new
 			MOV RDI, ' '
 			CALL print_char_new
-			LEA RDI, [RSI + size_name_string]
+			LEA RDI, [RSI + size_name_string] ; surname
 			CALL print_string_new
 			CALL print_nl_new
+		
 		.PRINT_STAFF_ID:
-			MOVZX RDI, [RSI + size_name_string + size_name_string]
+			MOV RDI, str_disp_staff_id
+			CALL print_string_new
+			LEA RDI, [RSI + size_name_string + size_name_string]
 			CALL print_string_new
 			CALL print_nl_new
 			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id] ;name, surname, id
+		
 		.START_PRINT_STAFF_DEPT:
-			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id]
-			
+			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id] 
 			; PRINT WHICH DEPARTMENT THE STAFF MEMBER WORKS IN.
-			
 			.STAFF_DEPT_0:
 			CMP RDI, 0
 			JNE .STAFF_DEPT_1
@@ -344,14 +358,32 @@ LIST_STAFF:
 			
 			.STAFF_DEPT_ERR:
 			PUSH RDI
-			
+			MOV RDI, str_staff_dept_ERR
+			CALL print_string_new
+			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_STAFF_DEPT
 		.END_PRINT_STAFF_DEPT:
-	
 		; Okay, so what's next?
 		
-	
+		.PRINT_STAFF_SALARY:
+			MOV RDI, str_disp_staff_salary ; "Salary: "
+			CALL print_string_new
+			PUSH RSI
+			ADD RSI, size_name_string
+			ADD RSI, size_name_string
+			ADD RSI, size_dept_id
+			PUSH RAX
+			MOV RAX, 0
+			MOV RAX, QWORD[RSI]
+			MOV RDI, RAX
+			CALL print_uint_new
+			MOV RDI, str_disp_staff_salary_currency ; " GBP"
+			CALL print_string_new
+			CALL print_nl_new
+			POP RAX
+			POP RSI
+
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record
 			DEC RCX
@@ -522,3 +554,5 @@ main:
 		POP RBP
 		RET ; End function main
 ;END BLOCK
+
+	
