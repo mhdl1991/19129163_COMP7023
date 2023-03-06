@@ -165,7 +165,7 @@ ADD_STAFF_MEMBER:
 	MOV RAX, QWORD[current_number_staff] ; VALUE OF CURRENT STAFF MEMBERS
 	MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
 	MUL RBX 
-	ADD RCX, RBX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
+	ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
 	.STAFF_MEMBER_READ_NAME:
 		; Staff member's name
 		MOV RDI, str_prompt_staff_name
@@ -303,15 +303,17 @@ LIST_STAFF:
 			CALL print_string_new
 			CALL print_nl_new
 		.PRINT_STAFF_ID:
-			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string]
-			MOV RDI, RSI
+			MOVZX RDI, [RSI + size_name_string + size_name_string]
 			CALL print_string_new
 			CALL print_nl_new
 			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id] ;name, surname, id
 		.START_PRINT_STAFF_DEPT:
 			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id]
+			
+			; PRINT WHICH DEPARTMENT THE STAFF MEMBER WORKS IN.
+			
 			.STAFF_DEPT_0:
-			CMP RDI, '0'
+			CMP RDI, 0
 			JNE .STAFF_DEPT_1
 			PUSH RDI
 			MOV RDI, str_staff_dept_0
@@ -320,9 +322,8 @@ LIST_STAFF:
 			POP RDI
 			JMP .END_PRINT_STAFF_DEPT
 			
-			; PRINT WHICH DEPARTMENT THE STAFF MEMBER WORKS IN.
 			.STAFF_DEPT_1:
-			CMP RDI, '1'
+			CMP RDI, 1
 			JNE .STAFF_DEPT_2
 			PUSH RDI
 			MOV RDI, str_staff_dept_1
@@ -332,7 +333,7 @@ LIST_STAFF:
 			JMP .END_PRINT_STAFF_DEPT
 			
 			.STAFF_DEPT_2:
-			CMP RDI, '2'
+			CMP RDI, 2
 			JNE .STAFF_DEPT_ERR
 			PUSH RDI
 			MOV RDI, str_staff_dept_2
@@ -346,8 +347,10 @@ LIST_STAFF:
 			
 			POP RDI
 			JMP .END_PRINT_STAFF_DEPT
-			
 		.END_PRINT_STAFF_DEPT:
+	
+		; Okay, so what's next?
+		
 	
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record
@@ -519,5 +522,3 @@ main:
 		POP RBP
 		RET ; End function main
 ;END BLOCK
-
-	
