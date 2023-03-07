@@ -351,7 +351,6 @@ PRINT_NUMBER_STAFF:
 	RET
 ;END BLOCK
 	
-	
 LIST_STAFF:
 ; START BLOCK
 	; Takes no parameters (staff members is global)
@@ -486,6 +485,7 @@ LIST_STAFF:
 			CALL print_nl_new
 
 		.GOTO_NEXT_STAFF:
+			CALL print_nl_new
 			ADD RSI, size_staff_record ; go to the next staff record
 			DEC RCX
 			JMP .START_PRINT_STAFF_LOOP
@@ -663,4 +663,3 @@ main:
 		; END BLOCK
 	; END BLOCK
 
-	
