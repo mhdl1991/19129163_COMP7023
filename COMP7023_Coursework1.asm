@@ -214,8 +214,9 @@ ADD_STAFF_MEMBER:
 			PUSH RBX
 			PUSH RCX 
 
+			MOV RBX, [buff_generic]
 			MOV RSI, RAX ; source- RAX
-			MOV RDI, [buff_generic] ; dest- buff_generic
+			MOV RDI, RBX ; dest- buff_generic
 			CALL copy_string ;copy string from RAX into buff_generic
 
 			MOV AL, BYTE[buff_generic] ;
@@ -223,11 +224,10 @@ ADD_STAFF_MEMBER:
 			JE .STAFF_MEMBER_READ_ID ;hmmm... send user back  if they put in an empty string? 
 
 			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
-
 			.STAFF_ID_FIRST_LETTER_CHECK:
 			CMP AL, 'p'
 			JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
-			SHR RAX, 8
+			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
 			
 			; The next 7 characters must all be digits
 			; counter
