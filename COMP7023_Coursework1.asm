@@ -16,7 +16,7 @@
 ;   Staff ID 9B - p + 7 digits
 ;   Department 1B (can be any one of Park Keeper, Gift Shop or Cafe)
 ;   Starting annual salary in GBP  4B (whole GBP  only)
-;   Year of joining 2B
+;   Year of joining 4B
 ;   Email address 64B
 ; record size - 208 Bytes/Staffer
 
@@ -69,8 +69,11 @@ SECTION .data
 	str_disp_staff_name DB "Name: ", 0
 	str_disp_staff_id DB "ID: ", 0
 	str_disp_staff_start_salary DB "Starting Salary: ", 0
+	str_disp_staff_curr_salary DB "Current Salary: ", 0
+	str_disp_staff_salary DB "Current Salary: ", 0
 	str_disp_staff_salary_currency DB " GBP", 0
 	str_disp_staff_year_join DB "Year of Joining: ", 0
+	str_disp_staff_email DB "E-mail address: ", 0
 
 	
 	; messages to show user when adding a badger
@@ -151,6 +154,7 @@ SECTION .data
 	
 	badg_keeper_id_offset EQU size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
+	current_year EQU 2023 ; for current salary calculation
 	max_number_staff EQU 100
 	max_number_badg EQU 500
 	
@@ -429,7 +433,41 @@ LIST_STAFF:
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
 			CALL print_nl_new
-			
+
+			; PRINT CURRENT SALARY AFTER YEARS OF SERVICE
+			PUSH RSI
+			PUSH RDI
+			PUSH RAX
+			PUSH RBX
+			PUSH RCX
+			PUSH RDX
+
+			; calculate years of service
+			MOV RAX, current_year
+			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary] ; year stored here
+			SUB RAX, RBX ; if year joining  < current year (2023), this should be positive
+			MOV RBX, 200
+			MUL RBX ; Bonus stored in RAX
+			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id ] ; base salary stored here
+			ADD RAX, RBX ; total salary
+
+			PUSH RAX
+			MOV RDI, str_disp_staff_curr_salary ; "Starting Salary: "
+			CALL print_string_new
+			POP RAX
+			MOV RDI, RAX
+			CALL print_uint_new
+			MOV RDI, str_disp_staff_salary_currency ; " GBP"
+			CALL print_string_new
+			CALL print_nl_new
+
+			POP RDX
+			POP RCX
+			POP RBX
+			POP RAX
+			POP RDI
+			POP RSI
+
 		.PRINT_STAFF_YEAR:
 			MOV RDI, str_disp_staff_year_join ; "Year join: "
 			CALL print_string_new
@@ -438,8 +476,11 @@ LIST_STAFF:
 			CALL print_nl_new
 
 		.PRINT_STAFF_EMAIL:
-
-
+			MOV RDI, str_disp_staff_email
+			CALL print_string_new
+			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year]
+			CALL print_string_new
+			CALL print_nl_new
 
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record ; go to the next staff record
