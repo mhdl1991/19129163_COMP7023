@@ -189,6 +189,10 @@ ADD_STAFF_MEMBER:
 		MOV RDI, str_prompt_staff_name
 		CALL print_string_new
 		CALL read_string_new
+		
+		CMP AL, 0
+		JE .STAFF_MEMBER_READ_NAME
+		
 		MOV RSI, RAX ; address of new string into rsi
 		MOV RDI, RCX ; address of memory slot into rdi
 		CALL copy_string
@@ -198,6 +202,10 @@ ADD_STAFF_MEMBER:
 		MOV RDI, str_prompt_staff_surname
 		CALL print_string_new
 		CALL read_string_new
+		
+		CMP AL, 0
+		JE .STAFF_MEMBER_READ_NAME
+		
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
@@ -214,7 +222,7 @@ ADD_STAFF_MEMBER:
 			PUSH RBX
 			PUSH RCX 
 
-			MOV RBX, [buff_generic]
+			MOV RBX, buff_generic ; pointer to buff_generic, 
 			MOV RSI, RAX ; source- RAX
 			MOV RDI, RBX ; dest- buff_generic
 			CALL copy_string ;copy string from RAX into buff_generic
@@ -230,29 +238,33 @@ ADD_STAFF_MEMBER:
 			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
 			
 			; The next 7 characters must all be digits
-			; counter
-			MOV RCX, 7
+			MOV RCX, 7 ; counter to check next 7 characters
 			.STAFF_ID_FORMAT_CHECK_LOOP:
-			;START LOOP
-			CMP AL, '0'
-			JLE .INCORRECT_STAFF_ID
-			CMP AL, '9'
-			JGE .INCORRECT_STAFF_ID
+				;START LOOP
+				CMP AL, '0'
+				JLE .INCORRECT_STAFF_ID
+				CMP AL, '9'
+				JGE .INCORRECT_STAFF_ID
+				
+				SHR RAX, 8
+				DEC RCX	; decrement counter
+				CMP RCX, 0
+				JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
+				;END LOOP
+			.STAFF_ID_END_LOOP:
+		
+			JMP .END_STAFF_ID_FORMAT_CHECK
 			
-			SHR RAX, 8
-			DEC RCX
-			CMP RCX, 0
-			JNE .STAFF_ID_FORMAT_CHECK_LOOP
-			JMP .STAFF_ID_END_LOOP
-
+			CMP AL, 0	; the last character must be a null terminator
+			JE .END_STAFF_ID_FORMAT_CHECK
+			
 			.INCORRECT_STAFF_ID:
 			MOV RDI, str_staff_id_ERR
 			CALL print_string_new
 			CALL print_nl_new
 			JMP .STAFF_MEMBER_READ_ID
-
-			.STAFF_ID_END_LOOP:
-			;END LOOP
+			
+			.END_STAFF_ID_FORMAT_CHECK:
 			POP RCX
 			POP RBX
 			POP RAX
@@ -267,6 +279,8 @@ ADD_STAFF_MEMBER:
 		MOV RDI, str_prompt_staff_dept
 		CALL print_string_new
 		CALL read_uint_new
+		CMP RAX, 0 
+		JL .ERROR ; No negatives. 
 		CMP RAX, 3 ; DEPT. SHOULD BE 0, 1 OR 2
 		JL .NOERROR
 		.ERROR:
@@ -274,9 +288,9 @@ ADD_STAFF_MEMBER:
 			CALL print_string_new
 			JMP .STAFF_MEMBER_READ_DEPT
 		.NOERROR:
-			MOV RSI, RAX
-			MOV BYTE[RCX], AL
-			ADD RCX, size_dept_id ; only 1B for the department ID field
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL ; copy the 1B integer  into the department ID field
+		ADD RCX, size_dept_id ; only 1B for the department ID field
 	.STAFF_MEMBER_READ_SALARY:
 		; Staff member salary
 		MOV RDI, str_prompt_staff_salary
