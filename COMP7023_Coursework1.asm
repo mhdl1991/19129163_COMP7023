@@ -65,14 +65,12 @@ SECTION .data
 	
 	str_number_staff DB "Total number of Staff: ", 10, 0
 	
-	
 	; messages to show when displaying staff member data to user
 	str_disp_staff_name DB "Name: ", 0
 	str_disp_staff_id DB "ID: ", 0
 	str_disp_staff_salary DB "Salary: ", 0
 	str_disp_staff_salary_currency DB " GBP", 0
 	str_disp_staff_year_join DB "Year of Joining: ", 0
-	
 	
 	; messages to show user when adding a badger
 	str_prompt_badg_full DB "ERROR- Cannot add new badger. Please delete existing badger", 10, 0
@@ -348,8 +346,8 @@ PRINT_NUMBER_STAFF:
 	
 LIST_STAFF:
 ; START BLOCK
-	; Takes no parameters (users is global)
-	; Lists full details of all users in the array
+	; Takes no parameters (staff members is global)
+	; Lists full details of all staff members in the array
     PUSH RBX
     PUSH RCX
     PUSH RDX
@@ -359,11 +357,12 @@ LIST_STAFF:
     LEA RSI, [arr_staff_members] ; load base address of the users array into RSI. In other words, RSI points to the users array.
     MOV RCX, [current_number_staff] ; we will use RCX for the counter in our loop
 	.START_PRINT_STAFF_LOOP:
+	; START BLOCK
 		CMP RCX, 0
 		JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
 		
 		.PRINT_STAFF_NAME:
-			MOV RDI, str_disp_staff_name
+			MOV RDI, str_disp_staff_name ; print "Name: "
 			CALL print_string_new
 			MOV RDI, RSI ; put the pointer to the current record in RDI, to pass to the print_string_new function
 			CALL print_string_new
@@ -438,9 +437,10 @@ LIST_STAFF:
 			CALL print_nl_new
 
 		.GOTO_NEXT_STAFF:
-			ADD RSI, size_staff_record
+			ADD RSI, size_staff_record ; go to the next staff record
 			DEC RCX
 			JMP .START_PRINT_STAFF_LOOP
+		; END BLOCK
 	.END_PRINT_STAFF_LOOP:
 	POP RSI
     POP RDI    
