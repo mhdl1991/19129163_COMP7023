@@ -1,5 +1,5 @@
 ; Your system must be able to store the following information about badgers in the zoo:
-;   Badger ID - 8B - b + 6 digits + null
+;   Badger ID - 8B - b + 6 digits
 ;   Name (64 bit) - 64B
 ;   Home sett (can be any one of Settfield, Badgerton, or Stripeville) - 1B
 ;   Mass in kg (to the nearest whole kg) - 1B, assuming that badgers are never going to be bigger than 255 kg
@@ -13,7 +13,7 @@
 ; Your system must be able to store the following information about staff members in the zoo:
 ;   Surname 64B
 ;   First Name 64B
-;   Staff ID 9B - p + 7 digits + null
+;   Staff ID 9B - p + 7 digits
 ;   Department 1B (can be any one of Park Keeper, Gift Shop or Cafe)
 ;   Starting annual salary in GBP  4B (whole GBP  only)
 ;   Year of joining 2B
@@ -111,7 +111,7 @@ SECTION .data
 	;   First Name 64B
 	;   Staff ID 9B
 	;   Department 1B (can be any one of Park Keeper, Gift Shop or Cafe)
-	;   Starting annual salary in GBP  2B (whole GBP  only)
+	;   Starting annual salary in GBP  4B (whole GBP  only)
 	;   Year of joining 2B
 	;   Email address 64B
 	size_delete_flag EQU 1 ; 0 or 1 to denote record is deleted ; currently not used
@@ -119,7 +119,7 @@ SECTION .data
 	; 64 B for surname
 	size_staff_id EQU 9 ; p + 7 digits + NULL
 	size_dept_id EQU 1 ; 1 Byte
-	size_salary EQU 2 ; 8 Bytes
+	size_salary EQU 8 ; 8 Btyes
 	size_year EQU 2 ; 2 Bytes
 	; 64 B for email
 	
@@ -267,6 +267,7 @@ ADD_STAFF_MEMBER:
 			POP RBX
 			POP RAX
 			POP RSI
+
 		MOV RSI, RAX ;source
 		MOV RDI, RCX ;destination
 		CALL copy_string
@@ -293,16 +294,16 @@ ADD_STAFF_MEMBER:
 		MOV RDI, str_prompt_staff_salary
 		CALL print_string_new
 		CALL read_uint_new
-		MOV WORD[RCX], RAX ;copy 2B number into record
-		ADD RCX, size_salary ;2B
+		MOV QWORD[RCX], RAX ;copy 8B number into record
+		ADD RCX, size_salary ;8B
 	.STAFF_MEMBER_READ_YEAR_JOIN:
 		; Staff member year of joining
 		MOV RDI, str_prompt_staff_year
 		CALL print_string_new
 		CALL read_uint_new
 		MOV RSI, RAX
-		MOV WORD[RCX], EAX
-		ADD RCX, size_year ;2B
+		MOV DWORD[RCX], EAX
+		ADD RCX, size_year ;4B
 	.STAFF_MEMBER_READ_EMAIL:
 		; Staff member email address
 		MOV RDI, str_prompt_staff_mail
@@ -358,7 +359,7 @@ LIST_STAFF:
 	.START_PRINT_STAFF_LOOP:
 	; START BLOCK
 		CMP RCX, 0
-		JLE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
+		JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
 		
 		.PRINT_STAFF_NAME:
 			MOV RDI, str_disp_staff_name ; print "Name: "
@@ -372,15 +373,15 @@ LIST_STAFF:
 			CALL print_nl_new
 		
 		.PRINT_STAFF_ID:
-			MOV RDI, str_disp_staff_id ; Prints "ID: "
+			MOV RDI, str_disp_staff_id
 			CALL print_string_new
-			LEA RDI, [RSI + size_name_string + size_name_string] ; ID is stored at address record + first name + surname
+			LEA RDI, [RSI + size_name_string + size_name_string]
 			CALL print_string_new
 			CALL print_nl_new
-			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id] ; move past name, surname, id
+			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id] ;name, surname, id
 		
 		.START_PRINT_STAFF_DEPT:
-			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id] ; Department ID is a single byte
+			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id] 
 			; PRINT WHICH DEPARTMENT THE STAFF MEMBER WORKS IN.
 			.STAFF_DEPT_0:
 			CMP RDI, 0
@@ -423,15 +424,15 @@ LIST_STAFF:
 
 		.PRINT_STAFF_SALARY:
 			MOV RDI, str_disp_staff_salary ; "Salary: "
-			CALL print_string_new      
-			MOV RDI, WORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id]
+			CALL print_string_new
+			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id]
 			CALL print_uint_new
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
 			CALL print_nl_new
 			
 		.PRINT_STAFF_YEAR:
-			MOV RDI, WORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
+			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
 			CALL print_uint_new
 			CALL print_nl_new
 
