@@ -127,6 +127,11 @@ SECTION .data
 	size_year EQU 4 ; 2 Bytes
 	; 64 B for email
 	
+	; These address offsets get REAL long!
+	staff_record_year_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary
+	staff_record_salary_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id
+	staff_record_mail_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year
+
 	size_staff_record EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year + size_name_string ;210B 
 	
 	; IS_DELETED 1B 
@@ -428,7 +433,7 @@ LIST_STAFF:
 		.PRINT_STAFF_SALARY:
 			MOV RDI, str_disp_staff_start_salary ; "Starting Salary: "
 			CALL print_string_new
-			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id]
+			MOV RDI, QWORD[RSI + staff_record_salary_offset]
 			CALL print_uint_new
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
@@ -436,6 +441,8 @@ LIST_STAFF:
 
 			.PRINT_STAFF_CURRENT_SALARY:
 			; START BLOCK
+			MOV RDI, str_disp_staff_curr_salary ; "Current Salary: "
+			CALL print_string_new
 			; PRINT CURRENT SALARY AFTER YEARS OF SERVICE
 			PUSH RSI
 			PUSH RDI
@@ -444,20 +451,13 @@ LIST_STAFF:
 			PUSH RCX
 			PUSH RDX
 
-			; calculate years of service
-			MOV RCX, current_year
-			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary] ; year stored here
-			SUB RCX, RBX ; if year joining  < current year (2023), this should be positive
-			MOV RBX, 200
-			MUL RCX ; Bonus stored in RAX
-			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id ] ; base salary stored here
-			ADD RAX, RBX ; total salary
-			MOV RCX, RAX
-
-			MOV RDI, str_disp_staff_curr_salary ; "Current Salary: "
-			CALL print_string_new
-
-			MOV RDI, RCX
+			MOVZX RDI, WORD[RSI + staff_record_year_offset] ; year stored here
+			MOV RAX, current_year ; assumed to be 2023
+			SUB RAX, RDI ; if year joining  < current year (2023), this should be positive
+			IMUL RAX, 200 ; bonus to salary stored in RAX
+			
+			MOVZX RDI, WORD[RSI + staff_record_salary_offset] ; base salary stored here
+			ADD RDI, RAX ; total salary
 			CALL print_uint_new
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
@@ -474,14 +474,14 @@ LIST_STAFF:
 		.PRINT_STAFF_YEAR:
 			MOV RDI, str_disp_staff_year_join ; "Year join: "
 			CALL print_string_new
-			MOV EDI, [RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
+			MOV EDI, [RSI + staff_record_year_offset]
 			CALL print_uint_new
 			CALL print_nl_new
 
 		.PRINT_STAFF_EMAIL:
 			MOV RDI, str_disp_staff_email
 			CALL print_string_new
-			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year]
+			LEA RDI, [RSI + staff_record_mail_offset]
 			CALL print_string_new
 			CALL print_nl_new
 
