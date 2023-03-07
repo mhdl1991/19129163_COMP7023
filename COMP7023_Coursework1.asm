@@ -184,11 +184,11 @@ ADD_STAFF_MEMBER:
 	ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
 	.STAFF_MEMBER_READ_NAME:
 		; Staff member's name
-		MOV RDI, str_prompt_staff_name
+		MOV RDI, str_prompt_staff_name ; prompts user to enter name
 		CALL print_string_new
 		CALL read_string_new
 		
-		CMP AL, 0
+		CMP AL, 0 ; if empty, keep prompting user to enter one
 		JE .STAFF_MEMBER_READ_NAME
 		
 		MOV RSI, RAX ; address of new string into rsi
@@ -227,7 +227,7 @@ ADD_STAFF_MEMBER:
 
 			MOV AL, BYTE[buff_generic] ;
 			CMP AL, 0
-			JE .STAFF_MEMBER_READ_ID ;hmmm... send user back  if they put in an empty string? 
+			JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string? 
 
 			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
 			.STAFF_ID_FIRST_LETTER_CHECK:
@@ -250,8 +250,6 @@ ADD_STAFF_MEMBER:
 				JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
 				;END LOOP
 			.STAFF_ID_END_LOOP:
-		
-			JMP .END_STAFF_ID_FORMAT_CHECK
 			
 			CMP AL, 0	; the last character must be a null terminator
 			JE .END_STAFF_ID_FORMAT_CHECK
