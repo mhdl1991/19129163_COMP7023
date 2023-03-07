@@ -68,9 +68,10 @@ SECTION .data
 	; messages to show when displaying staff member data to user
 	str_disp_staff_name DB "Name: ", 0
 	str_disp_staff_id DB "ID: ", 0
-	str_disp_staff_salary DB "Salary: ", 0
+	str_disp_staff_start_salary DB "Starting Salary: ", 0
 	str_disp_staff_salary_currency DB " GBP", 0
 	str_disp_staff_year_join DB "Year of Joining: ", 0
+
 	
 	; messages to show user when adding a badger
 	str_prompt_badg_full DB "ERROR- Cannot add new badger. Please delete existing badger", 10, 0
@@ -421,7 +422,7 @@ LIST_STAFF:
 		.END_PRINT_STAFF_DEPT:
 
 		.PRINT_STAFF_SALARY:
-			MOV RDI, str_disp_staff_salary ; "Salary: "
+			MOV RDI, str_disp_staff_start_salary ; "Starting Salary: "
 			CALL print_string_new
 			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id]
 			CALL print_uint_new
@@ -430,9 +431,15 @@ LIST_STAFF:
 			CALL print_nl_new
 			
 		.PRINT_STAFF_YEAR:
+			MOV RDI, str_disp_staff_year_join ; "Year join: "
+			CALL print_string_new
 			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
 			CALL print_uint_new
 			CALL print_nl_new
+
+		.PRINT_STAFF_EMAIL:
+
+
 
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record ; go to the next staff record
@@ -611,3 +618,5 @@ main:
 		RET ; End function main
 		; END BLOCK
 	; END BLOCK
+
+	
