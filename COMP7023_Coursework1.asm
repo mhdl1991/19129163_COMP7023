@@ -204,7 +204,7 @@ ADD_STAFF_MEMBER:
 		ADD RCX, size_name_string ;64B was reserved for surname
 	.STAFF_MEMBER_READ_ID:
 		; Staff member ID
-		MOV RDI, str_prompt_staff_id
+		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
 		CALL print_string_new ; print message
 		CALL read_string_new ; get input from user
 		; TEST IF STAFF ID IS IN CORRECT FORMAT.
