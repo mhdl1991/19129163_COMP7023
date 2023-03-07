@@ -124,7 +124,7 @@ SECTION .data
 	size_staff_id EQU 9 ; p + 7 digits + NULL
 	size_dept_id EQU 1 ; 1 Byte
 	size_salary EQU 8 ; 8 Btyes
-	size_year EQU 2 ; 2 Bytes
+	size_year EQU 4 ; 2 Bytes
 	; 64 B for email
 	
 	size_staff_record EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year + size_name_string ;210B 
@@ -443,19 +443,19 @@ LIST_STAFF:
 			PUSH RDX
 
 			; calculate years of service
-			MOV RAX, current_year
+			MOV RCX, current_year
 			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary] ; year stored here
-			SUB RAX, RBX ; if year joining  < current year (2023), this should be positive
+			SUB RCX, RBX ; if year joining  < current year (2023), this should be positive
 			MOV RBX, 200
-			MUL RBX ; Bonus stored in RAX
+			MUL RCX ; Bonus stored in RAX
 			MOV RBX, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id ] ; base salary stored here
 			ADD RAX, RBX ; total salary
+			MOV RCX, RAX
 
-			PUSH RAX
-			MOV RDI, str_disp_staff_curr_salary ; "Starting Salary: "
+			MOV RDI, str_disp_staff_curr_salary ; "Current Salary: "
 			CALL print_string_new
-			POP RAX
-			MOV RDI, RAX
+
+			MOV RDI, RCX
 			CALL print_uint_new
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
@@ -471,14 +471,14 @@ LIST_STAFF:
 		.PRINT_STAFF_YEAR:
 			MOV RDI, str_disp_staff_year_join ; "Year join: "
 			CALL print_string_new
-			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
+			MOV EDI, [RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
 			CALL print_uint_new
 			CALL print_nl_new
 
 		.PRINT_STAFF_EMAIL:
 			MOV RDI, str_disp_staff_email
 			CALL print_string_new
-			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year]
+			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year]
 			CALL print_string_new
 			CALL print_nl_new
 
