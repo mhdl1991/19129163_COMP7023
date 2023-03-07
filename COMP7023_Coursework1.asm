@@ -434,6 +434,8 @@ LIST_STAFF:
 			CALL print_string_new
 			CALL print_nl_new
 
+			.PRINT_STAFF_CURRENT_SALARY:
+			; START BLOCK
 			; PRINT CURRENT SALARY AFTER YEARS OF SERVICE
 			PUSH RSI
 			PUSH RDI
@@ -467,6 +469,7 @@ LIST_STAFF:
 			POP RAX
 			POP RDI
 			POP RSI
+			; END BLOCK
 
 		.PRINT_STAFF_YEAR:
 			MOV RDI, str_disp_staff_year_join ; "Year join: "
