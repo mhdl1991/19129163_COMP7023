@@ -218,7 +218,7 @@ ADD_STAFF_MEMBER:
 			MOV RDI, [buff_generic] ; dest- buff_generic
 			CALL copy_string ;copy string from RAX into buff_generic
 
-			MOV AL, BYTE[buff_generic]
+			MOV AL, BYTE[buff_generic] ;
 			CMP AL, 0
 			JE .STAFF_MEMBER_READ_ID ;hmmm... send user back  if they put in an empty string? 
 
