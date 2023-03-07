@@ -66,11 +66,12 @@ SECTION .data
 	str_number_staff DB "Total number of Staff: ", 10, 0
 	
 	
-	
+	; messages to show when displaying staff member data to user
 	str_disp_staff_name DB "Name: ", 0
 	str_disp_staff_id DB "ID: ", 0
 	str_disp_staff_salary DB "Salary: ", 0
 	str_disp_staff_salary_currency DB " GBP", 0
+	str_disp_staff_year_join DB "Year of Joining: ", 0
 	
 	
 	; messages to show user when adding a badger
@@ -83,7 +84,10 @@ SECTION .data
 							"2 - Stripeville", 10, 0
 	str_prompt_badg_mass DB "How much does the badger weigh?", 10, 0
 	str_prompt_badg_stripes DB "How many stripes does it have? (0 - 255)", 10, 0
-	str_prompt_badg_sex DB  "What sex is the badger? (0 for Male, 1 for Female)", 10, 0
+	str_prompt_badg_sex DB  "What sex is the badger?", 10, \
+							"0 - Male", 10, \
+							"1 - Female", 10, \
+							"2 - Intersex/Other", 10, 0
 	str_prompt_badg_birth_mon  DB  "What month was the badger born", 10, 0
 	str_prompt_badg_birth_year  DB  "What year was the badger born", 10, 0
 	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, 0
@@ -93,21 +97,26 @@ SECTION .data
 	str_badg_home_1 DB "Badgerton", 10, 0
 	str_badg_home_2 DB "Stripeville", 10, 0
 	str_badg_home_ERR DB "Error!", 10, 0
+
+	str_badg_sex_0 DB "Male", 10, 0
+	str_badg_sex_1 DB "Female", 10, 0
+	str_badg_sex_2 DB "Intersex", 10, 0
+	str_badg_sex_ERR DB "Error!", 10, 0
 	
 	
 	; Errors for badger and staff ID format
-	str_badg_id_incorrect DB "ERROR- A Badger's ID should be in the format bXXXXXX", 10,  0
-	str_staff_id_incorrect DB "ERROR- Staff member's ID should be in the format pXXXXXXX", 10, 0
+	str_badg_id_ERR DB "ERROR- A Badger's ID should be in the format bXXXXXX", 10,  0
+	str_staff_id_ERR DB "ERROR- Staff member's ID should be in the format pXXXXXXX", 10, 0
 	
 	; IS_DELETED 1B
 	;   Surname 64B
 	;   First Name 64B
-	;   Staff ID 1B (0- 255) (only 0 to 100 are used)
+	;   Staff ID 9B
 	;   Department 1B (can be any one of Park Keeper, Gift Shop or Cafe)
 	;   Starting annual salary in GBP  4B (whole GBP  only)
 	;   Year of joining 2B
 	;   Email address 64B
-	size_delete_flag EQU 1 ; 0 or 1 to denote record is deleted
+	size_delete_flag EQU 1 ; 0 or 1 to denote record is deleted ; currently not used
 	size_name_string EQU 64 ; Names are gonna be 64B long.
 	; 64 B for surname
 	size_staff_id EQU 9 ; p + 7 digits + NULL
@@ -119,8 +128,8 @@ SECTION .data
 	size_staff_record EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year + size_name_string ;210B 
 	
 	; IS_DELETED 1B 
-	;   Badger ID - 8B - b + 6 digits
 	;   Name (64 bit) - 64B
+	;   Badger ID - 8B - b + 6 digits
 	;   Home sett (can be any one of Settfield, Badgerton, or Stripeville) - 1B
 	;   Mass in kg (to the nearest whole kg) - 1B, assuming that badgers are never going to be bigger than 255 kg
 	;   Number of stripes (in the range from 0 to 255) - 1B
@@ -156,7 +165,7 @@ SECTION .data
 SECTION .bss
 	arr_staff_members: RESB size_staff_array; 210B/staff, 100 maximum staff members
 	arr_badgers: RESB size_badg_array ; 88B/badger, 500 maximum badgers
-	buff_generic: RESB 100
+	buff_generic: RESB 64 ; used for testing IDs. maybe don't need to make it big
 SECTION .text
 
 ADD_STAFF_MEMBER:
@@ -169,7 +178,7 @@ ADD_STAFF_MEMBER:
     PUSH RDX
     PUSH RDI
     PUSH RSI
-	
+
 	MOV RCX, arr_staff_members ; BASE ADDRESS OF STAFF MEMBERS ARRAY
 	MOV RAX, QWORD[current_number_staff] ; VALUE OF CURRENT STAFF MEMBERS
 	MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
@@ -200,21 +209,57 @@ ADD_STAFF_MEMBER:
 		CALL read_string_new ; get input from user
 		; TEST IF STAFF ID IS IN CORRECT FORMAT.
 		.STAFF_ID_FORMAT_CHECK:
+			PUSH RSI
+			PUSH RAX
 			PUSH RBX
 			PUSH RCX 
+
+			MOV RSI, RAX ; source- RAX
+			MOV RDI, [buff_generic] ; dest- buff_generic
+			CALL copy_string ;copy string from RAX into buff_generic
+
+			MOV AL, BYTE[buff_generic]
+			CMP AL, 0
+			JE .STAFF_MEMBER_READ_ID ;hmmm... send user back  if they put in an empty string? 
+
+			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
+
+			.STAFF_ID_FIRST_LETTER_CHECK:
+			CMP AL, 'p'
+			JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
+			SHR RAX, 8
+			
+			; The next 7 characters must all be digits
+			; counter
 			MOV RCX, 7
 			.STAFF_ID_FORMAT_CHECK_LOOP:
 			;START LOOP
+			CMP AL, '0'
+			JLE .INCORRECT_STAFF_ID
+			CMP AL, '9'
+			JGE .INCORRECT_STAFF_ID
 			
+			SHR RAX, 8
 			DEC RCX
 			CMP RCX, 0
 			JNE .STAFF_ID_FORMAT_CHECK_LOOP
+			JMP .STAFF_ID_END_LOOP
+
+			.INCORRECT_STAFF_ID:
+			MOV RDI, str_staff_id_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			JMP .STAFF_MEMBER_READ_ID
+
+			.STAFF_ID_END_LOOP:
 			;END LOOP
 			POP RCX
 			POP RBX
-		
-		MOV RSI, RAX
-		MOV RDI, RCX
+			POP RAX
+			POP RSI
+
+		MOV RSI, RAX ;source
+		MOV RDI, RCX ;destination
 		CALL copy_string
 		ADD RCX, size_staff_id ; 
 	.STAFF_MEMBER_READ_DEPT:
@@ -237,7 +282,6 @@ ADD_STAFF_MEMBER:
 		MOV RDI, str_prompt_staff_salary
 		CALL print_string_new
 		CALL read_uint_new
-		MOV RSI, RAX
 		MOV QWORD[RCX], RAX ;copy 8B number into record
 		ADD RCX, size_salary ;8B
 	.STAFF_MEMBER_READ_YEAR_JOIN:
@@ -364,25 +408,20 @@ LIST_STAFF:
 			POP RDI
 			JMP .END_PRINT_STAFF_DEPT
 		.END_PRINT_STAFF_DEPT:
-		; Okay, so what's next?
-		
+
 		.PRINT_STAFF_SALARY:
 			MOV RDI, str_disp_staff_salary ; "Salary: "
 			CALL print_string_new
-			PUSH RSI
-			ADD RSI, size_name_string
-			ADD RSI, size_name_string
-			ADD RSI, size_dept_id
-			PUSH RAX
-			MOV RAX, 0
-			MOV RAX, QWORD[RSI]
-			MOV RDI, RAX
+			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id]
 			CALL print_uint_new
 			MOV RDI, str_disp_staff_salary_currency ; " GBP"
 			CALL print_string_new
 			CALL print_nl_new
-			POP RAX
-			POP RSI
+			
+		.PRINT_STAFF_YEAR:
+			MOV RDI, QWORD[RSI + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary]
+			CALL print_uint_new
+			CALL print_nl_new
 
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record
@@ -408,6 +447,8 @@ DELETE_BADGER:
 	
 YEARS_OF_SERVICE:
 	; yearsOfService = currentYear–yearOfJoining
+	; get current year from user
+	
 	RET
 	
 AGE_CALCULATION:
@@ -438,7 +479,8 @@ MAIN_MENU_OPTIONS_PROMPT:
 	RET
 	
 main:
-;START BLOCK
+    mov rbp, rsp; for correct debugging
+	;START BLOCK
 	.START_MAIN_FUNCTION:
 		;compatibility boilerplate
 		MOV RBP, RSP
@@ -447,7 +489,7 @@ main:
 		SUB RSP, 32
 
 	.MENULOOP:
-	; START BLOCK
+		; START BLOCK
 		; Call the main menu options
 		CALL MAIN_MENU_OPTIONS_PROMPT
 		CALL read_int_new
@@ -460,6 +502,7 @@ main:
 		
 		; jump to the selected option
 		.BRANCHING:
+			; START BLOCK
 			CMP RDX, 1
 			JE .OPTION1
 			CMP RDX, 2
@@ -480,10 +523,10 @@ main:
 			MOV RDI, str_invalid_option
 			CALL print_string_new
 			JMP .MENULOOP
-		; END BLOCK
+			; END BLOCK
 		
 	.OPTION1: ;ADD STAFF MEMBER
-	; START BLOCK
+		; START BLOCK
 		; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
 		MOV RDX, [current_number_staff]
 		CMP RDX, max_number_staff
@@ -495,23 +538,23 @@ main:
 		; CALL ADD STAFF MEMBER METHOD
 		CALL ADD_STAFF_MEMBER
 		JMP .MENULOOP
-	; END BLOCK
+		; END BLOCK
 	
 	.OPTION2: ;DELETE STAFF MEMBER
-	; START BLOCK
+		; START BLOCK
 		JMP .MENULOOP
-	; END BLOCK
+		; END BLOCK
 		
 	.OPTION3: ;LIST STAFF MEMBERS
-	;START BLOCK
+		; START BLOCK
 		CALL PRINT_NUMBER_STAFF
 		CALL print_nl_new
 		CALL LIST_STAFF
 		JMP .MENULOOP
-	;END BLOCK
+		; END BLOCK
 	
 	.OPTION4: ;ADD BADGER
-	;START BLOCK
+		; START BLOCK
 		; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
 		MOV RDX, [current_number_badg]
 		CMP RDX, max_number_badg
@@ -523,36 +566,38 @@ main:
 		; CALL ADD STAFF MEMBER METHOD
 		CALL ADD_BADGER
 		JMP .MENULOOP
-	;END BLOCK
+		; END BLOCK
 	
 	.OPTION5:
-	;START BLOCK
+		; START BLOCK
 		JMP .MENULOOP
-	;END BLOCK
+		; END BLOCK
 	
 	.OPTION6:
-	;START BLOCK
+		; START BLOCK
 		JMP .MENULOOP
-	;END BLOCK
+		; END BLOCK
 	
 	.OPTION7:
-	;START BLOCK
+		; START BLOCK
 		JMP .MENULOOP
-	;END BLOCK
+		; END BLOCK
 	
 	.OPTION8:  ;EXIT
-	;START BLOCK
+		; START BLOCK
 		MOV RDI, str_program_exit
 		CALL print_string_new
-	;END BLOCK
+		; END BLOCK
 	
 	.FINISH_MAIN_FUNCTION:
+		; START BLOCK
 		; compatability boilerplate 2: electric boogaloo
 		; undo the stack
 		XOR RAX, RAX ; return zero
 		ADD RSP, 32
 		POP RBP
 		RET ; End function main
-;END BLOCK
+		; END BLOCK
+	; END BLOCK
 
 	
