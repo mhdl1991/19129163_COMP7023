@@ -16,7 +16,7 @@
 ;   Staff ID 9B - p + 7 digits
 ;   Department 1B (can be any one of Park Keeper, Gift Shop or Cafe)
 ;   Starting annual salary in GBP  4B (whole GBP  only)
-;   Year of joining 4B
+;   Year of joining 2B
 ;   Email address 64B
 ; record size - 208 Bytes/Staffer
 
