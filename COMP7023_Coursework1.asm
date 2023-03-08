@@ -205,6 +205,22 @@ ADD_STAFF_MEMBER:
 	MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
 	MUL RBX 
 	ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
+
+	.STAFF_FIND_EMPTY_SPOT_TO_ADD_TO:
+	MOV RCX, arr_staff_members
+	MOV RAX, size_staff_record
+	.LOOP_FIND_EMPTY:
+	;START LOOP
+	CMP BYTE[RCX], 1
+	JNE .STAFF_MEMBER_SET_FLAG ;Let's gooooooo
+	ADD RCX, RAX
+	CMP RCX, size_staff_array
+	JL .LOOP_FIND_EMPTY
+	MOV RDI, str_prompt_staff_full
+	CALL print_string_new
+	JMP .STAFF_MEMBER_END_ADD ;buddy, just get out.
+	;END LOOP
+
 	
 	.STAFF_MEMBER_SET_FLAG:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
@@ -345,6 +361,7 @@ ADD_STAFF_MEMBER:
 		ADD RCX, size_name_string 
 
 	; FINALLY ADDED ALL THE STAFF DETAILS
+	.STAFF_MEMBER_END_ADD:
 	INC QWORD[current_number_staff]
 	POP RSI
     POP RDI    
@@ -384,7 +401,7 @@ LIST_STAFF:
     PUSH RSI
 	
     LEA RSI, [arr_staff_members] ; load base address of the users array into RSI. In other words, RSI points to the users array.
-    MOV RCX, [current_number_staff] ; we will use RCX for the counter in our loop
+    MOV RCX, 0 ;[current_number_staff] ; we will use RCX for the counter in our loop
 	.START_PRINT_STAFF_LOOP:
 	; START BLOCK
 		CMP RCX, 0
@@ -514,7 +531,9 @@ LIST_STAFF:
 
 		.GOTO_NEXT_STAFF:
 			ADD RSI, size_staff_record ; go to the next staff record
-			DEC RCX
+			ADD RCX, size_staff_record
+			CMP RCX, size_staff_array
+			JG .END_PRINT_STAFF_LOOP
 			JMP .START_PRINT_STAFF_LOOP
 		; END BLOCK
 	.END_PRINT_STAFF_LOOP:
@@ -535,7 +554,7 @@ DELETE_STAFF:
     PUSH RDI
     PUSH RSI
 	; Prompt user to input the ID of the staff member they wanna delete
-	MOV RSI, str_prompt_staff_delete_id
+	MOV RDI, str_prompt_staff_delete_id
 	CALL print_string_new
 	CALL read_string_new
 
@@ -588,12 +607,12 @@ DELETE_STAFF:
 	.END_FIND_STAFF_ID_THEN_DELETE_LOOP:
 	CMP RBX, 1
 	JNE .STAFF_ID_WASNT_FOUND
-	MOV RSI, str_disp_id_found
+	MOV RDI, str_disp_id_found
 	CALL print_string_new
 	CALL print_nl_new
 	JMP .STAFF_ID_DELETE_POST
 	.STAFF_ID_WASNT_FOUND:
-	MOV RSI, str_disp_id_not_found
+	MOV RDI, str_disp_id_not_found
 	CALL print_string_new
 	CALL print_nl_new
 
