@@ -189,8 +189,9 @@ SECTION .bss
 	buff_generic: RESB size_name_string ; used for testing IDs. maybe don't need to make it big
 SECTION .text
 
+
 ADD_STAFF_MEMBER:
-; START BLOCK	
+	; START BLOCK	
 	; Adds a new staff member into the staff member array
 	; We need to check that the array is not full before calling this function. Otherwise buffer overflow will occur.
 	; No parameters (we are using the users array as a global)
@@ -200,12 +201,6 @@ ADD_STAFF_MEMBER:
     PUSH RDI
     PUSH RSI
 
-	;MOV RCX, arr_staff_members ; BASE ADDRESS OF STAFF MEMBERS ARRAY
-	;MOV RAX, QWORD[current_number_staff] ; VALUE OF CURRENT STAFF MEMBERS
-	;MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
-	;MUL RBX 
-	;ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
-
 	MOV RCX, arr_staff_members
 	MOV RBX, 0
 	.LOOP_FIND_EMPTY:
@@ -213,7 +208,7 @@ ADD_STAFF_MEMBER:
 	CMP BYTE[RCX], 0
 	JE .STAFF_MEMBER_SET_FLAG ; found an empty spot Let's gooooooo
 	ADD RCX, size_staff_record ; skip blocks of size_staff_record 
-	ADD RBX, 0
+	ADD RBX, size_staff_record
 	CMP RBX, size_staff_array
 	JL .LOOP_FIND_EMPTY ; keep going
 	PUSH RAX
@@ -371,12 +366,48 @@ ADD_STAFF_MEMBER:
     POP RCX
     POP RBX 
 	RET
-; END BLOCK
+	; END BLOCK
 
 ADD_BADGER:
-; START BLOCK
+	; START BLOCK
+	; Adds a new badger into the badger array
+	; We need to check that the array is not full before calling this function. Otherwise buffer overflow will occur.
+	; No parameters (we are using the badgers array as a global)
+    PUSH RBX
+    PUSH RCX
+    PUSH RDX
+    PUSH RDI
+    PUSH RSI
+
+
+	MOV RCX, arr_badgers
+	MOV RBX, 0
+	.BADG_LOOP_FIND_EMPTY:
+		;START LOOP
+		CMP BYTE[RCX], 0
+		JE .BADG_SET_FLAG ; found an empty spot Let's gooooooo
+		ADD RCX, size_badg_record ; skip blocks of size_staff_record 
+		ADD RBX, size_badg_record
+		CMP RBX, size_staff_array
+		JL .BADG_LOOP_FIND_EMPTY ; keep going
+		PUSH RAX
+		MOV RDI, str_prompt_staff_full
+		CALL print_string_new
+		POP RAX
+		JMP .BADG_END_ADD ;buddy, just get out.
+		;END LOOP
+
+	.BADG_SET_FLAG:
+
+
+	.BADG_END_ADD:
+	POP RSI
+    POP RDI    
+    POP RDX
+    POP RCX
+    POP RBX 
 	RET
-; END BLOCK
+	; END BLOCK
 
 PRINT_NUMBER_STAFF:
 ; START BLOCK
