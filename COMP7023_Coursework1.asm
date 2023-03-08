@@ -200,27 +200,27 @@ ADD_STAFF_MEMBER:
     PUSH RDI
     PUSH RSI
 
-	MOV RCX, arr_staff_members ; BASE ADDRESS OF STAFF MEMBERS ARRAY
-	MOV RAX, QWORD[current_number_staff] ; VALUE OF CURRENT STAFF MEMBERS
-	MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
-	MUL RBX 
-	ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
+	;MOV RCX, arr_staff_members ; BASE ADDRESS OF STAFF MEMBERS ARRAY
+	;MOV RAX, QWORD[current_number_staff] ; VALUE OF CURRENT STAFF MEMBERS
+	;MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
+	;MUL RBX 
+	;ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
 
-	.STAFF_FIND_EMPTY_SPOT_TO_ADD_TO:
 	MOV RCX, arr_staff_members
 	MOV RAX, size_staff_record
 	.LOOP_FIND_EMPTY:
 	;START LOOP
-	CMP BYTE[RCX], 1
-	JNE .STAFF_MEMBER_SET_FLAG ;Let's gooooooo
-	ADD RCX, RAX
+	CMP BYTE[RCX], 0
+	JE .STAFF_MEMBER_SET_FLAG ;found an empty spot Let's gooooooo
+	ADD RCX, RAX ; skip blocks of size_staff_record 
 	CMP RCX, size_staff_array
-	JL .LOOP_FIND_EMPTY
+	JL .LOOP_FIND_EMPTY ; keep going
+	PUSH RAX
 	MOV RDI, str_prompt_staff_full
 	CALL print_string_new
+	POP RAX
 	JMP .STAFF_MEMBER_END_ADD ;buddy, just get out.
 	;END LOOP
-
 	
 	.STAFF_MEMBER_SET_FLAG:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
@@ -254,7 +254,7 @@ ADD_STAFF_MEMBER:
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
 	.STAFF_MEMBER_READ_ID:
-	;START BLOCK
+		;START BLOCK
 		; Staff member ID
 		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
 		CALL print_string_new ; print message
@@ -316,7 +316,7 @@ ADD_STAFF_MEMBER:
 		MOV RDI, RCX ;destination
 		CALL copy_string
 		ADD RCX, size_staff_id ; add the bytes reserved for staff ID
-	; END BLOCK
+		; END BLOCK
 	
 	.STAFF_MEMBER_READ_DEPT:
 		; Staff member Dept
@@ -361,8 +361,9 @@ ADD_STAFF_MEMBER:
 		ADD RCX, size_name_string 
 
 	; FINALLY ADDED ALL THE STAFF DETAILS
-	.STAFF_MEMBER_END_ADD:
+
 	INC QWORD[current_number_staff]
+	.STAFF_MEMBER_END_ADD:
 	POP RSI
     POP RDI    
     POP RDX
@@ -404,8 +405,8 @@ LIST_STAFF:
     MOV RCX, 0 ;[current_number_staff] ; we will use RCX for the counter in our loop
 	.START_PRINT_STAFF_LOOP:
 	; START BLOCK
-		CMP RCX, 0
-		JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
+		;CMP RCX, 0
+		;JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
 		
 		.CHECK_STAFF_DELETE_FLAG:
 			MOVZX RDI, BYTE[RSI] ;the first byte of the staff record is the delete flag
@@ -473,7 +474,6 @@ LIST_STAFF:
 			POP RDI
 			JMP .END_PRINT_STAFF_DEPT
 		.END_PRINT_STAFF_DEPT:
-
 		.PRINT_STAFF_SALARY:
 			MOV RDI, str_disp_staff_start_salary ; "Starting Salary: "
 			CALL print_string_new
