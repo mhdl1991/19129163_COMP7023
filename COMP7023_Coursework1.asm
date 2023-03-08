@@ -90,7 +90,7 @@ SECTION .data
 	str_prompt_badg_full DB "ERROR- Cannot add new badger. Please delete existing badger", 10, 0
 	str_prompt_badg_name DB "Please enter the badger's name", 10, 0
 	str_prompt_badg_id DB "Please give the badger an ID number", 10, 0
-	str_prompt_badg_sett DB  "Which setting do they live in?", 10, \
+	str_prompt_badg_home DB  "Which setting do they live in?", 10, \
 							"0 - Settfield", 10, \
 							"1 - Badgerton", 10, \
 							"2 - Stripeville", 10, 0
@@ -116,10 +116,15 @@ SECTION .data
 	str_badg_sex_ERR DB "Error!", 10, 0
 	
 	
+
+
+
 	; Errors for badger and staff ID format
 	str_badg_id_ERR DB "ERROR- A Badger's ID should be in the format bXXXXXX", 10,  0
 	str_staff_id_ERR DB "ERROR- Staff member's ID should be in the format pXXXXXXX", 10, 0
-	
+	str_prompt_badg_wrong_home DB "ERROR- Invalid value entered for Badger home",10, 0
+	str_prompt_badg_wrong_mass DB "ERROR- Invalid value entered for Badger mass",10, 0
+
 	; IS_DELETED 1B
 	;   Surname 64B
 	;   First Name 64B
@@ -388,16 +393,67 @@ ADD_BADGER:
 		JE .BADG_SET_FLAG ; found an empty spot Let's gooooooo
 		ADD RCX, size_badg_record ; skip blocks of size_staff_record 
 		ADD RBX, size_badg_record
-		CMP RBX, size_staff_array
+		CMP RBX, size_badg_array
 		JL .BADG_LOOP_FIND_EMPTY ; keep going
 		PUSH RAX
-		MOV RDI, str_prompt_staff_full
+		MOV RDI, str_prompt_badg_full
 		CALL print_string_new
 		POP RAX
 		JMP .BADG_END_ADD ;buddy, just get out.
 		;END LOOP
 
 	.BADG_SET_FLAG:
+		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
+		INC RCX ; increment RCX by 1 byte
+
+	.BADG_READ_NAME:
+		; Badger name
+		MOV RDI, str_prompt_badg_name
+		CALL print_string_new
+		CALL read_string_new
+
+		CMP AL, 0
+		JE .BADG_READ_NAME
+		MOV RSI, RAX ; RSI - address of new string
+		MOV RDI, RCX ; RDS - address of memory slot
+		CALL copy_string ; copy string to memory slot
+		ADD RCX, size_name_string ; 64B was reserved for name
+
+	.BADG_READ_HOME:
+		; Read a byte for badger's home setting
+		MOV RDI, str_prompt_badg_home
+		CALL print_string_new
+		CALL read_uint_new ; stored in RAX
+		CMP RAX, 0
+		JL .BADG_HOME_ERR
+		CMP RAX, 3 ; only 0, 1 or 2
+		.BADG_HOME_ERR:
+			MOV RDI, str_prompt_badg_wrong_home
+			CALL print_string_new
+			JMP .BADG_READ_HOME
+		.BADG_HOME_NOERR:
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL
+		ADD RCX, size_badg_home
+
+	.BADG_READ_MASS:
+		MOV RDI, str_prompt_badg_mass
+		CALL print_string_new
+		CALL read_uint_new
+		CMP RAX, 0
+		JG .BADG_MASS_NOERR
+		.BADG_MASS_ERR:
+			MOV RDI, str_prompt_badg_wrong_mass
+			CALL print_string_new
+			JMP .BADG_READ_MASS
+		.BADG_MASS_NOERR:
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL
+		ADD RCX, size_badg_mass
+	
+	.BADG_READ_STRIPES:
+	
+	
 
 
 	.BADG_END_ADD:
