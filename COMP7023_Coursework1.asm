@@ -207,13 +207,14 @@ ADD_STAFF_MEMBER:
 	;ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
 
 	MOV RCX, arr_staff_members
-	MOV RAX, size_staff_record
+	MOV RBX, 0
 	.LOOP_FIND_EMPTY:
 	;START LOOP
 	CMP BYTE[RCX], 0
-	JE .STAFF_MEMBER_SET_FLAG ;found an empty spot Let's gooooooo
-	ADD RCX, RAX ; skip blocks of size_staff_record 
-	CMP RCX, size_staff_array
+	JE .STAFF_MEMBER_SET_FLAG ; found an empty spot Let's gooooooo
+	ADD RCX, size_staff_record ; skip blocks of size_staff_record 
+	ADD RBX, 0
+	CMP RBX, size_staff_array
 	JL .LOOP_FIND_EMPTY ; keep going
 	PUSH RAX
 	MOV RDI, str_prompt_staff_full
