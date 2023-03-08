@@ -1,4 +1,5 @@
 ; Your system must be able to store the following information about badgers in the zoo:
+;	DELETED FLAG - 1B
 ;   Badger ID - 8B - b + 6 digits
 ;   Name (64 bit) - 64B
 ;   Home sett (can be any one of Settfield, Badgerton, or Stripeville) - 1B
@@ -11,6 +12,7 @@
 ;  record size - 88 Bytes/Badger
 
 ; Your system must be able to store the following information about staff members in the zoo:
+;	DELETED FLAG - 1B
 ;   Surname 64B
 ;   First Name 64B
 ;   Staff ID 9B - p + 7 digits
@@ -64,6 +66,14 @@ SECTION .data
 	str_staff_dept_ERR DB "Error!", 0
 	
 	str_number_staff DB "Total number of Staff: ", 10, 0
+	
+	
+	; delete staff member
+	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
+	str_prompt_staff_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
+	str_disp_id_found DB "Staff member found!", 10, 0
+	str_disp_id_not_found DB "No staff member with this ID exists", 10, 0
+	
 	
 	; messages to show when displaying staff member data to user
 	str_disp_staff_name DB "Name: ", 0
@@ -128,11 +138,13 @@ SECTION .data
 	; 64 B for email
 	
 	; These address offsets get REAL long!
-	staff_record_year_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary
-	staff_record_salary_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id
-	staff_record_mail_offset EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year
+	staff_record_id_offset EQU size_delete_flag + size_name_string + size_name_string
+	staff_record_dept_offset EQU size_delete_flag + size_name_string + size_name_string + size_staff_id
+	staff_record_year_offset EQU size_delete_flag + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary
+	staff_record_salary_offset EQU size_delete_flag + size_name_string + size_name_string + size_staff_id + size_dept_id
+	staff_record_mail_offset EQU size_delete_flag + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year
 
-	size_staff_record EQU size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year + size_name_string ;210B 
+	size_staff_record EQU size_delete_flag + size_name_string + size_name_string + size_staff_id + size_dept_id + size_salary + size_year + size_name_string ;211B 
 	
 	; IS_DELETED 1B 
 	;   Name (64 bit) - 64B
@@ -145,6 +157,7 @@ SECTION .data
 	;   Year of birth  - 2B
 	;   Staff ID of assigned park keeper - 9B - p + 7 digits + NULL
 	
+	; delete flag used here too
 	size_badg_id EQU 8 ; b + 6 digits + NULL
 	; 64B name 
 	size_badg_home EQU 1
@@ -155,9 +168,9 @@ SECTION .data
 	size_badg_yr EQU 2
 	; 9B staff ID
 	
-	size_badg_record EQU size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 88B
+	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
 	
-	badg_keeper_id_offset EQU size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
+	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
 	current_year EQU 2023 ; for current salary calculation
 	max_number_staff EQU 100
@@ -173,7 +186,7 @@ SECTION .data
 SECTION .bss
 	arr_staff_members: RESB size_staff_array; 210B/staff, 100 maximum staff members
 	arr_badgers: RESB size_badg_array ; 88B/badger, 500 maximum badgers
-	buff_generic: RESB 64 ; used for testing IDs. maybe don't need to make it big
+	buff_generic: RESB size_name_string ; used for testing IDs. maybe don't need to make it big
 SECTION .text
 
 ADD_STAFF_MEMBER:
@@ -192,6 +205,11 @@ ADD_STAFF_MEMBER:
 	MOV RBX, size_staff_record ; SIZE OF ONE STAFF MEMBER RECORD
 	MUL RBX 
 	ADD RCX, RAX ; BASE_ADDRESS + (RECORD_SIZE * NUMBER_STAFF) = ADDRESS OF NEXT UNUSED STAFF MEMBER
+	
+	.STAFF_MEMBER_SET_FLAG:
+		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
+		INC RCX ; increment RCX by 1 byte
+		
 	.STAFF_MEMBER_READ_NAME:
 		; Staff member's name
 		MOV RDI, str_prompt_staff_name ; prompts user to enter name
@@ -205,6 +223,7 @@ ADD_STAFF_MEMBER:
 		MOV RDI, RCX ; address of memory slot into rdi
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for first name
+		
 	.STAFF_MEMBER_READ_SURNAME:
 		; Staff member's surname
 		MOV RDI, str_prompt_staff_surname
@@ -219,12 +238,14 @@ ADD_STAFF_MEMBER:
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
 	.STAFF_MEMBER_READ_ID:
+	;START BLOCK
 		; Staff member ID
 		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
 		CALL print_string_new ; print message
 		CALL read_string_new ; get input from user
 		; TEST IF STAFF ID IS IN CORRECT FORMAT.
 		.STAFF_ID_FORMAT_CHECK:
+		;START BLOCK
 			PUSH RSI
 			PUSH RAX
 			PUSH RBX
@@ -237,7 +258,7 @@ ADD_STAFF_MEMBER:
 
 			MOV AL, BYTE[buff_generic] ;
 			CMP AL, 0
-			JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string? 
+			JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
 
 			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
 			.STAFF_ID_FIRST_LETTER_CHECK:
@@ -248,7 +269,7 @@ ADD_STAFF_MEMBER:
 			; The next 7 characters must all be digits
 			MOV RCX, 7 ; counter to check next 7 characters
 			.STAFF_ID_FORMAT_CHECK_LOOP:
-				;START LOOP
+			;START LOOP
 				CMP AL, '0'
 				JL .INCORRECT_STAFF_ID
 				CMP AL, '9'
@@ -258,9 +279,8 @@ ADD_STAFF_MEMBER:
 				DEC RCX	; decrement counter
 				CMP RCX, 0
 				JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
-				;END LOOP
+			;END LOOP
 			.STAFF_ID_END_LOOP:
-			
 			CMP AL, 0	; the last character must be a null terminator
 			JE .END_STAFF_ID_FORMAT_CHECK
 			
@@ -275,11 +295,13 @@ ADD_STAFF_MEMBER:
 			POP RBX
 			POP RAX
 			POP RSI
-
+		;END BLOCK
 		MOV RSI, RAX ;source
 		MOV RDI, RCX ;destination
 		CALL copy_string
-		ADD RCX, size_staff_id ; 
+		ADD RCX, size_staff_id ; add the bytes reserved for staff ID
+	; END BLOCK
+	
 	.STAFF_MEMBER_READ_DEPT:
 		; Staff member Dept
 		MOV RDI, str_prompt_staff_dept
@@ -368,28 +390,34 @@ LIST_STAFF:
 		CMP RCX, 0
 		JE .END_PRINT_STAFF_LOOP ; if RCX is zero we're at the end of the print staff loop
 		
+		.CHECK_STAFF_DELETE_FLAG:
+			MOVZX RDI, BYTE[RSI] ;the first byte of the staff record is the delete flag
+			CMP RDI, 1
+			JNE .GOTO_NEXT_STAFF
+			CALL print_nl_new ; If I put this AFTER the record, deleted records are going to add a lot of empty lines
+		
 		.PRINT_STAFF_NAME:
 			MOV RDI, str_disp_staff_name ; print "Name: "
 			CALL print_string_new
-			MOV RDI, RSI ; put the pointer to the current record in RDI, to pass to the print_string_new function
+			LEA RDI, [RSI + size_delete_flag] ; put the pointer to the current record in RDI, to pass to the print_string_new function
 			CALL print_string_new
 			MOV RDI, ' '
 			CALL print_char_new
-			LEA RDI, [RSI + size_name_string] ; surname
+			LEA RDI, [RSI + size_delete_flag + size_name_string] ; surname
 			CALL print_string_new
 			CALL print_nl_new
 		
 		.PRINT_STAFF_ID:
 			MOV RDI, str_disp_staff_id
 			CALL print_string_new
-			LEA RDI, [RSI + size_name_string + size_name_string]
+			LEA RDI, [RSI + staff_record_id_offset]
 			CALL print_string_new
 			CALL print_nl_new
-			LEA RDI, [RSI + size_name_string + size_name_string + size_staff_id] ;name, surname, id
+			LEA RDI, [RSI + staff_record_dept_offset] ;name, surname, id
 		
 		.START_PRINT_STAFF_DEPT:
-			MOVZX RDI, BYTE[RSI + size_name_string + size_name_string + size_staff_id] 
 			; PRINT WHICH DEPARTMENT THE STAFF MEMBER WORKS IN.
+			MOVZX RDI, BYTE[RSI + staff_record_dept_offset] 
 			.STAFF_DEPT_0:
 			CMP RDI, 0
 			JNE .STAFF_DEPT_1
@@ -485,7 +513,6 @@ LIST_STAFF:
 			CALL print_nl_new
 
 		.GOTO_NEXT_STAFF:
-			CALL print_nl_new
 			ADD RSI, size_staff_record ; go to the next staff record
 			DEC RCX
 			JMP .START_PRINT_STAFF_LOOP
@@ -499,19 +526,95 @@ LIST_STAFF:
 	RET
 ; END BLOCK
 	
+DELETE_STAFF:
+;START BLOCK
+	PUSH RAX
+	PUSH RBX
+    PUSH RCX
+    PUSH RDX
+    PUSH RDI
+    PUSH RSI
+	; Prompt user to input the ID of the staff member they wanna delete
+	MOV RSI, str_prompt_staff_delete_id
+	CALL print_string_new
+	CALL read_string_new
+
+	; Put the string read from user into buff_generic
+	MOV RBX, buff_generic ; pointer to buff_generic, 
+	MOV RSI, RAX ; source- RAX
+	MOV RDI, RBX ; dest- buff_generic
+	CALL copy_string ;copy string from RAX into buff_generic
+
+	; Get the base address of the user_array
+	LEA RSI, [arr_staff_members] ; load base address of the staff array into RSI. In other words, RSI points to the staff array.
+	MOV RCX, 0
+	MOV RBX, 0 ; use this as a flag to show that the staff record has been found
+
+	.FIND_STAFF_ID_THEN_DELETE_LOOP:
+	;START LOOP
+		.FIND_ID_IS_RECORD_DELETED:
+			; FIRST, CHECK IF THE FIRST BYTE IN THE RECORD IS SET TO 1
+			MOVZX RDI, BYTE[RSI] ;the first byte of the staff record is the delete flag.
+			CMP RDI, 1
+			JNE .FIND_ID_GOTO_NEXT_STAFF
+
+		.FIND_STAFF_ID_CHECK_ID:
+			PUSH RBX
+			PUSH RSI
+			PUSH RDI
+			LEA RDI, [RSI + staff_record_id_offset] ;put the staff ID in RDI
+			LEA RSI, [buff_generic] ;put the search string in RSI
+			CALL strings_are_equal ;need to use RSI and RDI for this 
+			CMP RAX, 0
+			POP RDI
+			POP RSI
+			POP RBX
+			JE .FIND_ID_GOTO_NEXT_STAFF ;if RAX is 0, the strings didn't match
+
+		.FOUND_STAFF_ID_NOW_DELETE:
+			MOV RBX, 1
+			MOV BYTE[RSI], 0
+			DEC QWORD[current_number_staff] ;delet this
+			JMP .END_FIND_STAFF_ID_THEN_DELETE_LOOP
+
+		.FIND_ID_GOTO_NEXT_STAFF:
+			ADD RSI, size_staff_record ; go to the next staff record
+			ADD RCX, size_staff_record
+			CMP RCX, size_staff_array
+			JG .END_FIND_STAFF_ID_THEN_DELETE_LOOP
+			JMP .FIND_STAFF_ID_THEN_DELETE_LOOP
+		; GO TO THE NEXT STAFF RECORD
+	;END LOOP
+	.END_FIND_STAFF_ID_THEN_DELETE_LOOP:
+	CMP RBX, 1
+	JNE .STAFF_ID_WASNT_FOUND
+	MOV RSI, str_disp_id_found
+	CALL print_string_new
+	CALL print_nl_new
+	JMP .STAFF_ID_DELETE_POST
+	.STAFF_ID_WASNT_FOUND:
+	MOV RSI, str_disp_id_not_found
+	CALL print_string_new
+	CALL print_nl_new
+
+	.STAFF_ID_DELETE_POST:
+	;ollie on outie
+    POP RSI
+    POP RDI
+	POP RDX
+	POP RCX
+	POP RBX
+	POP RAX
+	RET
+;END BLOCK	
+
+
+
 LIST_BADGERS:
 	RET
 	
-DELETE_STAFF:
-	RET
-	
+
 DELETE_BADGER:
-	RET
-	
-YEARS_OF_SERVICE:
-	; yearsOfService = currentYear–yearOfJoining
-	; get current year from user
-	
 	RET
 	
 AGE_CALCULATION:
@@ -561,8 +664,7 @@ main:
 		CALL print_string_new
 		MOV RDI, RDX
 		CALL print_int_new
-		CALL print_nl_new
-		
+		CALL print_nl_new	
 		; jump to the selected option
 		.BRANCHING:
 			; START BLOCK
@@ -588,65 +690,73 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-	.OPTION1: ;ADD STAFF MEMBER
-		; START BLOCK
-		; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
-		MOV RDX, [current_number_staff]
-		CMP RDX, max_number_staff
-		JL .STAFF_NOT_FULL
-		MOV RDI, str_prompt_staff_full
-		CALL print_string_new
-		JMP .MENULOOP
-		.STAFF_NOT_FULL:
-		; CALL ADD STAFF MEMBER METHOD
-		CALL ADD_STAFF_MEMBER
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION2: ;DELETE STAFF MEMBER
-		; START BLOCK
-		JMP .MENULOOP
-		; END BLOCK
+		.OPTION1: ;ADD STAFF MEMBER
+			; START BLOCK
+			; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
+			MOV RDX, [current_number_staff]
+			CMP RDX, max_number_staff
+			JL .STAFF_NOT_FULL
+			MOV RDI, str_prompt_staff_full
+			CALL print_string_new
+			JMP .MENULOOP
+			.STAFF_NOT_FULL:
+			; CALL ADD STAFF MEMBER METHOD
+			CALL ADD_STAFF_MEMBER
+			JMP .MENULOOP
+			; END BLOCK
 		
-	.OPTION3: ;LIST STAFF MEMBERS
-		; START BLOCK
-		CALL PRINT_NUMBER_STAFF
-		CALL print_nl_new
-		CALL LIST_STAFF
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION4: ;ADD BADGER
-		; START BLOCK
-		; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
-		MOV RDX, [current_number_badg]
-		CMP RDX, max_number_badg
-		JL .BADG_NOT_FULL
-		MOV RDI, str_prompt_badg_full
-		CALL print_string_new
-		JMP .MENULOOP
-		.BADG_NOT_FULL:
-		; CALL ADD STAFF MEMBER METHOD
-		CALL ADD_BADGER
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION5:
-		; START BLOCK
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION6:
-		; START BLOCK
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION7:
-		; START BLOCK
-		JMP .MENULOOP
-		; END BLOCK
-	
-	.OPTION8:  ;EXIT
+		.OPTION2: ;DELETE STAFF MEMBER
+			; START BLOCK
+			MOV RDX, [current_number_staff]
+			CMP RDX, 0
+			JG .STAFF_HAS_RECORDS
+			MOV RDI, str_prompt_staff_empty
+			CALL print_string_new
+			JMP .MENULOOP
+			.STAFF_HAS_RECORDS:
+			CALL DELETE_STAFF
+			JMP .MENULOOP
+			; END BLOCK
+			
+		.OPTION3: ;LIST STAFF MEMBERS
+			; START BLOCK
+			CALL PRINT_NUMBER_STAFF
+			CALL print_nl_new
+			CALL LIST_STAFF
+			JMP .MENULOOP
+			; END BLOCK
+		
+		.OPTION4: ;ADD BADGER
+			; START BLOCK
+			; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
+			MOV RDX, [current_number_badg]
+			CMP RDX, max_number_badg
+			JL .BADG_NOT_FULL
+			MOV RDI, str_prompt_badg_full
+			CALL print_string_new
+			JMP .MENULOOP
+			.BADG_NOT_FULL:
+			; CALL ADD STAFF MEMBER METHOD
+			CALL ADD_BADGER
+			JMP .MENULOOP
+			; END BLOCK
+		
+		.OPTION5:
+			; START BLOCK
+			JMP .MENULOOP
+			; END BLOCK
+		
+		.OPTION6:
+			; START BLOCK
+			JMP .MENULOOP
+			; END BLOCK
+		
+		.OPTION7:
+			; START BLOCK
+				JMP .MENULOOP
+			; END BLOCK
+		
+		.OPTION8:  ;EXIT
 		; START BLOCK
 		MOV RDI, str_program_exit
 		CALL print_string_new
@@ -663,3 +773,4 @@ main:
 		; END BLOCK
 	; END BLOCK
 
+	
