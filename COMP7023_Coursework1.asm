@@ -32,7 +32,7 @@ SECTION .data
 str_badg_art DB \
 "WELCOME TO JONNY'S NOCTURNAL ZOO.", 10,\
 "                                                                                        ",10,\
-"                    ████                                                                ", 10, \
+"                    ████                                                                ",10, \
 "                  ██░░░░██                                                              ",10,\
 "              ████░░██████████              ████████████                                ",10,\
 "            ██    ░░░░░░░░░░░░██████████████░░░░░░░░░░░░████████████████                ",10,\
@@ -51,7 +51,7 @@ str_badg_art DB \
 "                      ██░░░░░░░░░░██  ██░░░░░░██      ██░░░░░░██    ██░░░░░░░░██        ",10,\
 "                    ██░░░░░░░░░░██    ██░░░░██      ██░░░░░░██      ██░░░░░░██          ",10,\
 "                      ██████████      ██████          ████████        ██████            ",10,\
-"                                                                                        ",10,\
+"                                                                                        ",10,0
 
 	; variables for messages to user
 	
@@ -102,8 +102,8 @@ str_badg_art DB \
 	
 	
 	; messages to show when displaying staff member data to user
-	str_disp_staff_name DB "Name: ", 0
-	str_disp_staff_id DB "ID: ", 0
+	str_disp_staff_name DB "Staffer Name: ", 0
+	str_disp_staff_id DB "Staffer ID: ", 0
 	str_disp_staff_start_salary DB "Starting Salary: ", 0
 	str_disp_staff_curr_salary DB "Current Salary: ", 0
 	str_disp_staff_salary DB "Current Salary: ", 0
@@ -115,7 +115,8 @@ str_badg_art DB \
 	; messages to show user when adding a badger
 	str_prompt_badg_full DB "ERROR- Cannot add new badger. Please delete existing badger", 10, 0
 	str_prompt_badg_name DB "Please enter the badger's name", 10, 0
-	str_prompt_badg_id DB "Please give the badger an ID number", 10, 0
+	str_prompt_badg_id DB "Please give the badger an ID number", 10, \
+						  "(should  be in format bXXXXXX where X is a digit from 0 to 9)", 10, 0
 	str_prompt_badg_home DB  "Which setting do they live in?", 10, \
 							"0 - Settfield", 10, \
 							"1 - Badgerton", 10, \
@@ -156,15 +157,24 @@ str_badg_art DB \
 	str_badg_sex_ERR DB "Error!", 10, 0
 
 
+	; messages when displaying badger details to user
+	str_disp_badg_name DB "Badger Name: ", 0
+	str_disp_badg_id DB "Badger ID: ", 0
+	str_disp_badg_sett DB "Sett: ", 0
+	str_disp_badg_sex DB "Sex: ", 0
+	str_disp_badg_born DB "Date of Birth: ", 0
+	str_disp_badg_age DB "Age: ", 0
+	str_disp_badg_mass DB "Mass: ", 0
+	str_disp_badg_stripes DB "Stripes: ", 0
+	str_disp_badg_stripiness DB "Stripiness: ", 0
+	str_disp_badg_keeper DB "Keeper ID: ", 0
+
 	; delete badger
 	str_prompt_badg_empty DB "NO BADGERS?", 10, 0
 	str_prompt_badg_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
 	str_disp_badg_id_found DB "Badger found!", 10, 0
 	str_disp_badg_id_not_found DB "No badger with this ID exists", 10, 0
 	
-
-
-
 	; Errors for badger and staff ID format
 	str_badg_id_ERR DB "ERROR- A Badger's ID should be in the format bXXXXXX", 10,  0
 	str_staff_id_ERR DB "ERROR- Staff member's ID should be in the format pXXXXXXX", 10, 0
@@ -187,7 +197,7 @@ str_badg_art DB \
 	str_mon_9 DB "October", 0
 	str_mon_10 DB "November", 0
 	str_mon_11 DB "December", 0
-
+	str_mon_12 DB "Not a real month", 0 
 
 
 
@@ -244,6 +254,7 @@ str_badg_art DB \
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
 	current_year EQU 2023 ; for current salary calculation
+	current_month EQU 2 ; for badger age calculation
 	max_number_staff EQU 100
 	max_number_badg EQU 500
 	
@@ -262,16 +273,10 @@ SECTION .text
 
 BIG_HONKING_WELCOME_MESSAGE:
 	; START BLOCK
-	PUSH RBX
-	PUSH RCX
-	PUSH RDX
-	PUSH RSI
+	PUSH RDI
 	MOV RDI, str_badg_art
 	CALL print_string_new
-	POP RSI
-	POP RDX
-	POP RCX
-	POP RBX
+	POP RDI
 	RET
 	; END BLOCK
 STAFF_ID_FORMAT_CHECK_FUNCTION:
@@ -280,13 +285,28 @@ STAFF_ID_FORMAT_CHECK_FUNCTION:
 	PUSH RAX
 	PUSH RBX
 	PUSH RCX
+
+	CMP RDX, 0
+	JNE .STAFF_MEMBER_READ_ID
+
+	.KEEPER_READ_ID:
+		;START BLOCK
+		; Keeper ID
+		MOV RDI, str_prompt_badg_keeper_id
+		CALL print_string_new
+		JMP .END_ID_PROMPT
+		;END BLOCK
+
 	.STAFF_MEMBER_READ_ID:
 		;START BLOCK
 		; Staff member ID
 		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
 		CALL print_string_new ; print message
-		CALL read_string_new ; get input from user
+		JMP .END_ID_PROMPT
 		;END BLOCK
+
+	.END_ID_PROMPT:
+	CALL read_string_new ; get input from user
 	
 	.STAFF_ID_FORMAT_CHECK:
 		;START BLOCK
@@ -352,19 +372,19 @@ ADD_STAFF_MEMBER:
 	MOV RCX, arr_staff_members
 	MOV RBX, 0
 	.LOOP_FIND_EMPTY:
-	;START LOOP
-	CMP BYTE[RCX], 0
-	JE .STAFF_MEMBER_SET_FLAG ; found an empty spot Let's gooooooo
-	ADD RCX, size_staff_record ; skip blocks of size_staff_record 
-	ADD RBX, size_staff_record
-	CMP RBX, size_staff_array
-	JL .LOOP_FIND_EMPTY ; keep going
-	PUSH RAX
-	MOV RDI, str_prompt_staff_full
-	CALL print_string_new
-	POP RAX
-	JMP .STAFF_MEMBER_END_ADD ;buddy, just get out.
-	;END LOOP
+		;START LOOP
+		CMP BYTE[RCX], 0
+		JE .STAFF_MEMBER_SET_FLAG ; found an empty spot Let's gooooooo
+		ADD RCX, size_staff_record ; skip blocks of size_staff_record 
+		ADD RBX, size_staff_record
+		CMP RBX, size_staff_array
+		JL .LOOP_FIND_EMPTY ; keep going
+		PUSH RAX
+		MOV RDI, str_prompt_staff_full
+		CALL print_string_new
+		POP RAX
+		JMP .STAFF_MEMBER_END_ADD ;buddy, just get out.
+		;END LOOP
 	
 	.STAFF_MEMBER_SET_FLAG:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
@@ -398,65 +418,11 @@ ADD_STAFF_MEMBER:
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
 	.STAFF_MEMBER_READ_ID:
-		; ;START BLOCK
-		; ; Staff member ID
-		; MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
-		; CALL print_string_new ; print message
-		; CALL read_string_new ; get input from user
-		; ; TEST IF STAFF ID IS IN CORRECT FORMAT.
-		; .STAFF_ID_FORMAT_CHECK:
-		; 	;START BLOCK
-		; 	PUSH RSI
-		; 	PUSH RAX
-		; 	PUSH RBX
-		; 	PUSH RCX 
-
-		; 	MOV RBX, buff_generic ; pointer to buff_generic, 
-		; 	MOV RSI, RAX ; source- RAX
-		; 	MOV RDI, RBX ; dest- buff_generic
-		; 	CALL copy_string ;copy string from RAX into buff_generic
-
-		; 	MOV AL, BYTE[buff_generic] ;
-		; 	CMP AL, 0
-		; 	JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
-
-		; 	MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
-		; 	.STAFF_ID_FIRST_LETTER_CHECK:
-		; 	CMP AL, 'p'
-		; 	JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
-		; 	SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
-			
-		; 	; The next 7 characters must all be digits
-		; 	MOV RCX, 7 ; counter to check next 7 characters
-		; 	.STAFF_ID_FORMAT_CHECK_LOOP:
-		; 	;START LOOP
-		; 		CMP AL, '0'
-		; 		JL .INCORRECT_STAFF_ID
-		; 		CMP AL, '9'
-		; 		JG .INCORRECT_STAFF_ID
-				
-		; 		SHR RAX, 8
-		; 		DEC RCX	; decrement counter
-		; 		CMP RCX, 0
-		; 		JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
-		; 	;END LOOP
-		; 	.STAFF_ID_END_LOOP:
-		; 	CMP AL, 0	; the last character must be a null terminator
-		; 	JE .END_STAFF_ID_FORMAT_CHECK
-			
-		; 	.INCORRECT_STAFF_ID:
-		; 	MOV RDI, str_staff_id_ERR
-		; 	CALL print_string_new
-		; 	CALL print_nl_new
-		; 	JMP .STAFF_MEMBER_READ_ID
-			
-		; 	.END_STAFF_ID_FORMAT_CHECK:
-		; 	POP RCX
-		; 	POP RBX
-		; 	POP RAX
-		; 	POP RSI
-		; 	;END BLOCK
+		; START BLOCK
+		PUSH RDX
+		MOV RDX, 1 ;Parameter to tell the STAFF_ID_FORMAT_CHECK_FUNCTION that you want a staff ID not a keeper ID
 		CALL STAFF_ID_FORMAT_CHECK_FUNCTION ;this should populate buff_generic
+		POP RDX
 
 		PUSH RBX
 		MOV RBX, buff_generic
@@ -726,6 +692,8 @@ ADD_BADGER:
 
 	.BADG_READ_KEEPER_ID:
 		; Badger keeper
+		PUSH RDX
+		MOV RDX, 0 ; use RAX as a parameter?
 		CALL STAFF_ID_FORMAT_CHECK_FUNCTION ;this should populate buff_generic
 		PUSH RBX
 		MOV RBX, buff_generic
@@ -734,8 +702,11 @@ ADD_BADGER:
 		CALL copy_string
 		ADD RCX, size_staff_id ; add the bytes reserved for staff ID
 		POP RBX
+		POP RDX
 
+	INC QWORD[current_number_badg]
 	.BADG_END_ADD:
+
 	POP RSI
     POP RDI    
     POP RDX
@@ -743,10 +714,6 @@ ADD_BADGER:
     POP RBX 
 	RET
 	; END BLOCK
-
-
-
-
 
 PRINT_NUMBER_STAFF:
 	; START BLOCK
@@ -935,13 +902,13 @@ DELETE_STAFF:
 	MOV RDI, RBX ; dest- buff_generic
 	CALL copy_string ;copy string from RAX into buff_generic
 
-	; Get the base address of the user_array
+	; Get the base address of the staff members array
 	LEA RSI, [arr_staff_members] ; load base address of the staff array into RSI. In other words, RSI points to the staff array.
 	MOV RCX, 0
 	MOV RBX, 0 ; use this as a flag to show that the staff record has been found
 
 	.FIND_STAFF_ID_THEN_DELETE_LOOP:
-	;START LOOP
+		;START LOOP
 		.FIND_ID_IS_RECORD_DELETED:
 			; FIRST, CHECK IF THE FIRST BYTE IN THE RECORD IS SET TO 1
 			MOVZX RDI, BYTE[RSI] ;the first byte of the staff record is the delete flag.
@@ -968,12 +935,13 @@ DELETE_STAFF:
 			JMP .END_FIND_STAFF_ID_THEN_DELETE_LOOP
 
 		.FIND_ID_GOTO_NEXT_STAFF:
+			; GO TO THE NEXT STAFF RECORD
 			ADD RSI, size_staff_record ; go to the next staff record
 			ADD RCX, size_staff_record
 			CMP RCX, size_staff_array
 			JG .END_FIND_STAFF_ID_THEN_DELETE_LOOP
 			JMP .FIND_STAFF_ID_THEN_DELETE_LOOP
-		; GO TO THE NEXT STAFF RECORD
+		
 	;END LOOP
 	.END_FIND_STAFF_ID_THEN_DELETE_LOOP:
 	CMP RBX, 1
@@ -999,9 +967,315 @@ DELETE_STAFF:
 	;END BLOCK	
 
 LIST_BADGERS:
-	RET
-	
+	;START BLOCK
+	;Takes no parameters (badgers array is global)
+	PUSH RBX
+	PUSH RCX
+	PUSH RDX
+	PUSH RDI
+	PUSH RSI
 
+	LEA RSI, [arr_badgers]
+	MOV RCX, 0
+
+	.START_PRINT_BADG_LOOP:
+		;START BLOCK
+		; print data out in order they were added to the record.
+		.CHECK_BADG_DELETE_FLAG:
+			MOVZX RDI, BYTE[RSI]
+			CMP RDI, 1
+			JNE .GOTO_NEXT_BADG
+			CALL print_nl_new
+		.PRINT_BADG_NAME:
+			MOV RDI, str_disp_badg_name
+			CALL print_string_new
+			LEA RDI, [RSI + size_delete_flag]
+			CALL print_string_new
+		.PRINT_BADG_ID:
+			MOV RDI, str_disp_badg_id
+			CALL print_string_new
+			LEA RDI, [RSI + size_delete_flag + size_name_string]
+			CALL print_string_new
+		.PRINT_BADG_HOME:
+			;START BLOCK
+			MOV RDI, str_disp_badg_sett
+			CALL print_string_new
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id]
+			
+			.BADG_SETT_0:
+			CMP RDI, 0
+			JNE .BADG_SETT_1
+			PUSH RDI
+			MOV RDI, str_badg_home_0
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_HOME
+
+			.BADG_SETT_1:
+			CMP RDI, 1
+			JNE .BADG_SETT_2
+			PUSH RDI
+			MOV RDI, str_badg_home_1
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_HOME
+			
+			
+			.BADG_SETT_2:
+			CMP RDI, 2
+			JNE .BADG_SETT_ERR
+			PUSH RDI
+			MOV RDI, str_badg_home_2
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_HOME
+			
+			.BADG_SETT_ERR:
+			PUSH RDI
+			MOV RDI, str_badg_home_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_HOME
+			;END BLOCK
+		.END_PRINT_BADG_HOME:
+		.PRINT_BADG_MASS:
+			MOV RDI, str_disp_badg_mass
+			CALL print_string_new
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
+			CALL print_uint_new
+			CALL print_nl_new
+		.PRINT_BADG_STRIPES:
+			MOV RDI, str_disp_badg_stripes
+			CALL print_string_new
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
+			CALL print_uint_new
+			CALL print_nl_new
+		.PRINT_BADG_STRIPINESS:
+			MOV RDI, str_disp_badg_stripiness
+			CALL print_string_new
+			; Calculate stripiness
+			MOVZX RAX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
+			MOVZX RBX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
+			MUL RBX
+			MOV RDI, RBX
+			CALL print_uint_new
+			CALL print_nl_new
+		.PRINT_BADG_SEX:
+			MOV RDI, str_disp_badg_sex
+			CALL print_string_new
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes]
+			
+			.BADG_SEX_0:
+			CMP RDI, 0
+			JNE .BADG_SEX_1 
+			PUSH RDI
+			MOV RDI, str_badg_sex_0
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_SEX
+			
+			.BADG_SEX_1:
+			CMP RDI, 1	
+			JNE .BADG_SEX_2
+			PUSH RDI
+			MOV RDI, str_badg_sex_1
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_SEX
+			
+			.BADG_SEX_2:
+			CMP RDI, 2
+			JNE .BADG_SEX_ERR
+			PUSH RDI
+			MOV RDI, str_badg_sex_2
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_SEX
+			
+			.BADG_SEX_ERR:
+			PUSH RDI
+			MOV RDI, str_badg_sex_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_SEX
+		.END_PRINT_BADG_SEX:
+		.PRINT_BADG_DOB:
+			; Print month and year together
+			MOV RDI, str_disp_badg_born
+			CALL print_string_new
+			CALL print_nl_new
+
+			.PRINT_BADG_DOB_MONTH:
+				MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex]
+				CMP RDI, 12
+				JG .PRINT_MON_ERR
+				CMP RDI, 0
+				JL .PRINT_MON_ERR
+				.PRINT_JANUARY:
+				CMP RDI, 0
+				JNE .PRINT_FEBRUARY
+				PUSH RDI
+				MOV RDI, str_mon_0
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_FEBRUARY:
+				CMP RDI, 1
+				JNE .PRINT_MARCH
+				PUSH RDI
+				MOV RDI, str_mon_1
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_MARCH:
+				CMP RDI, 2
+				JNE .PRINT_APRIL
+				PUSH RDI
+				MOV RDI, str_mon_2
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_APRIL:
+				CMP RDI, 3
+				JNE .PRINT_MAY
+				PUSH RDI
+				MOV RDI, str_mon_3
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_MAY:
+				CMP RDI, 4
+				JNE .PRINT_JUNE
+				PUSH RDI
+				MOV RDI, str_mon_4
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_JUNE:
+				CMP RDI, 5
+				JNE .PRINT_JULY
+				PUSH RDI
+				MOV RDI, str_mon_5
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_JULY:
+				CMP RDI, 6
+				JNE .PRINT_AUGUST
+				PUSH RDI
+				MOV RDI, str_mon_6
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_AUGUST:
+				CMP RDI, 7
+				JNE .PRINT_SEPTEMBER
+				PUSH RDI
+				MOV RDI, str_mon_7
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_SEPTEMBER:
+				CMP RDI, 8
+				JNE .PRINT_OCTOBER
+				PUSH RDI
+				MOV RDI, str_mon_8
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_OCTOBER:
+				CMP RDI, 9
+				JNE .PRINT_NOVEMBER
+				PUSH RDI
+				MOV RDI, str_mon_9
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_NOVEMBER:
+				CMP RDI, 10
+				JNE .PRINT_DECEMBER
+				PUSH RDI
+				MOV RDI, str_mon_10
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_DECEMBER:
+				CMP RDI, 11
+				JNE .PRINT_MON_ERR
+				PUSH RDI
+				MOV RDI, str_mon_11
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+				.PRINT_MON_ERR:
+				PUSH RDI
+				MOV RDI, str_mon_12
+				CALL print_string_new
+				POP RDI
+				JMP .END_PRINT_BADG_DOB_MONTH
+			.END_PRINT_BADG_DOB_MONTH:
+			
+			;PRINT A SPACE
+			MOV RDI, ' '
+			CALL print_char_new
+
+			.PRINT_BADG_DOB_YEAR:
+			MOV EDI, [RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon]
+			CALL print_uint_new
+			CALL print_nl_new
+
+		.END_PRINT_BADG_DOB:
+		.PRINT_BADG_AGE:
+			; Oh boy this is gonna SUCK
+			MOV RDI, str_disp_badg_age
+			CALL print_string_new
+			PUSH RAX
+			PUSH RBX
+
+			MOVZX RDI, WORD[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon]
+			MOV RAX, current_year
+			SUB RAX, RDI ; Age = CurrentYear - BirthYear
+			; okay now we need to account for month of birth
+			
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex]
+			MOV RBX, current_month
+
+			CMP RBX, RDI ; (is currentMonth >= birthMonth)
+			JGE .DONTDECREMENT
+			DEC RAX ;if it is then decrement by 1
+			.DONTDECREMENT:			
+			CALL print_uint_new
+			CALL print_nl_new
+			POP RBX
+			POP RAX
+		.PRINT_KEEPER_ID:
+			MOV RDI, str_disp_badg_keeper
+			CALL print_string_new
+			LEA RDI, [RSI + size_delete_flag + size_name_string +size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr]
+			CALL print_string_new
+		.GOTO_NEXT_BADG:
+			ADD RSI, size_badg_record
+			ADD RCX, size_badg_record
+			CMP RCX, size_badg_array
+			JG .END_PRINT_BADG_LOOP
+			JMP .START_PRINT_BADG_LOOP
+	.END_PRINT_BADG_LOOP:
+	POP RSI
+	POP RDI
+	POP RDX
+	POP RCX
+	POP RBX
+	RET
+	;END BLOCK
+	
 DELETE_BADGER:
 	;START BLOCK
 	PUSH RAX
@@ -1011,18 +1285,70 @@ DELETE_BADGER:
 	PUSH RDI
 	PUSH RSI
 
+	; Prompt user to input the ID of the badger they want to delete
 	MOV RDI, str_prompt_badg_delete_id
 	CALL print_string_new
 	CALL read_string_new
 
+	; put the string read from the user into buff_generic
 	MOV RBX, buff_generic
 	MOV RSI, RAX
 	MOV RDI, RBX
 	CALL copy_string
 
+	; get the base address of the badger array
+	LEA RSI, [arr_badgers]
+	MOV RCX, 0 
+	MOV RBX, 0 ; use this to flag that the badger has been found
 
+	.FIND_BADG_THEN_DELETE_LOOP:
+		;START LOOP
+		.FIND_ID_IS_BADG_DELETED:
+			;CHECK IF THE FIRST BYTE IN THE RECORD IS DELETED
+			MOVZX RDI, BYTE[RSI]
+			CMP RDI, 1
+			JNE .FIND_ID_GOTO_NEXT_BADG
 
+		.FIND_BADG_ID_CHECK_ID:
+			PUSH RBX
+			PUSH RSI
+			PUSH RDI
+			LEA RDI, [RSI + badg_keeper_id_offset]
+			LEA RSI, [buff_generic]
+			CALL strings_are_equal
+			CMP RAX, 0
+			POP RDI
+			POP RSI
+			POP RBX
+			JE .FIND_ID_GOTO_NEXT_BADG
+		.FOUND_BADG_ID_NOW_DELETE:
+			MOV RBX, 1
+			MOV BYTE[RSI], 0
+			DEC QWORD[current_number_badg]
+			JMP .END_FIND_BADG_ID_THEN_DELETE_LOOP
 
+		.FIND_ID_GOTO_NEXT_BADG:
+			; GO TO THE NEXT BADG RECORD
+			ADD RSI, size_badg_record
+			ADD RCX, size_badg_record
+			CMP RCX, size_badg_array
+			JG .END_FIND_BADG_ID_THEN_DELETE_LOOP
+			JMP .END_FIND_BADG_ID_THEN_DELETE_LOOP
+	;END LOOP
+	.END_FIND_BADG_ID_THEN_DELETE_LOOP:
+	CMP RBX, 1
+	JNE .BADG_ID_WASNT_FOUND
+	MOV RDI, str_disp_badg_id_found
+	CALL print_string_new
+	CALL print_nl_new
+	JMP .BADG_ID_DELETE_POST
+
+	.BADG_ID_WASNT_FOUND:
+	MOV RDI, str_disp_badg_id_not_found
+	CALL print_string_new
+	CALL print_nl_new
+
+	.BADG_ID_DELETE_POST:
 	POP RSI
 	POP RDI
 	POP RDX
@@ -1031,26 +1357,6 @@ DELETE_BADGER:
 	POP RAX
 	RET
 	;END BLOCK
-	
-AGE_CALCULATION:
-	; if (currentMonth – birthMonth) >= 0
-	; 	age = thisYear – yearOfBirth
-	; else
-	; 	age = thisYear – yearOfBirth – 1
-	
-	; return value must be pushed to EAX
-	
-	;JG .currentMonthGreaterOrEqual
-	;.currentMonthLess:
-	
-	;.currentMonthGreaterOrEqual:
-	
-	
-	RET
-	
-STRIPINESS_CALCULATION:
-	; stripiness = mass * numberOfStripes
-	RET
 	
 MAIN_MENU_OPTIONS_PROMPT:
     PUSH RDI
