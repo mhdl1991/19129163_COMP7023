@@ -76,7 +76,8 @@ str_badg_art DB \
 	str_prompt_staff_wrong_dept DB "ERROR- Invalid value entered for Department ID"
 	str_prompt_staff_name DB "Please enter the staff member's name", 10, 0
 	str_prompt_staff_surname DB "Please enter the staff member's surname", 10, 0
-	str_prompt_staff_id DB "Please enter the staff member's ID", 10, 0
+	str_prompt_staff_id DB "Please enter the staff member's ID", 10, \
+							"(should  be in format pXXXXXXX where X is a digit from 0 to 9)", 10, 0
 	str_prompt_staff_dept DB "Which department do they work in?", 10, \
 							"0 - Park Keeper", 10, \
 							"1 - Gift Shop", 10, \
@@ -140,7 +141,8 @@ str_badg_art DB \
 								"11 - December", 10, 0
 
 	str_prompt_badg_birth_year  DB  "What year was the badger born", 10, 0
-	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, 0
+	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, \
+								 "(should  be in format pXXXXXXX where X is a digit from 0 to 9)", 10, 0
 	
 	
 	str_badg_home_0 DB "Settfield", 10, 0
