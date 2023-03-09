@@ -114,7 +114,13 @@ SECTION .data
 	str_badg_sex_1 DB "Female", 10, 0
 	str_badg_sex_2 DB "Intersex", 10, 0
 	str_badg_sex_ERR DB "Error!", 10, 0
-	
+
+
+	; delete badger
+	str_prompt_badg_empty DB "NO BADGERS?", 10, 0
+	str_prompt_badg_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
+	str_disp_badg_id_found DB "Badger found!", 10, 0
+	str_disp_badg_id_not_found DB "No badger with this ID exists", 10, 0
 	
 
 
@@ -124,6 +130,26 @@ SECTION .data
 	str_staff_id_ERR DB "ERROR- Staff member's ID should be in the format pXXXXXXX", 10, 0
 	str_prompt_badg_wrong_home DB "ERROR- Invalid value entered for Badger home",10, 0
 	str_prompt_badg_wrong_mass DB "ERROR- Invalid value entered for Badger mass",10, 0
+	str_prompt_badg_wrong_sex DB "ERROR- Invalid value entered for Badger sex",10, 0
+	str_prompt_badg_wrong_stripes DB "ERROR- Invalid value entered for Badger stripes",10, 0
+	str_prompt_badg_wrong_mon DB "ERROR- Invalid value entered for birth month",10, 0
+
+	; Months
+	str_mon_0 DB, "January", 0
+	str_mon_1 DB, "February", 0
+	str_mon_2 DB, "March", 0
+	str_mon_3 DB, "April", 0
+	str_mon_4 DB, "May", 0
+	str_mon_5 DB, "June", 0
+	str_mon_6 DB, "July", 0
+	str_mon_7 DB, "August", 0
+	str_mon_8 DB, "September", 0
+	str_mon_9 DB, "October", 0
+	str_mon_10 DB, "November", 0
+	str_mon_11 DB, "December", 0
+
+
+
 
 	; IS_DELETED 1B
 	;   Surname 64B
@@ -167,13 +193,13 @@ SECTION .data
 	; 64B name 
 	size_badg_home EQU 1
 	size_badg_mass EQU 1
-	size_num_stripes EQU 1
+	size_badg_stripes EQU 1
 	size_badg_sex EQU 1
 	size_badg_mon EQU 1
 	size_badg_yr EQU 2
 	; 9B staff ID
 	
-	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
+	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
 	
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
@@ -419,6 +445,73 @@ ADD_BADGER:
 		CALL copy_string ; copy string to memory slot
 		ADD RCX, size_name_string ; 64B was reserved for name
 
+	.BADG_READ_ID:
+		;START BLOCK
+		; Staff member ID
+		MOV RDI, str_prompt_badg_id ; PROMPT USER TO ENTER STAFF ID
+		CALL print_string_new ; print message
+		CALL read_string_new ; get input from user
+
+		; TEST IF BADGER ID IS IN CORRECT FORMAT
+		.STAFF_ID_FORMAT_CHECK:
+		;START BLOCK
+			PUSH RSI
+			PUSH RAX
+			PUSH RBX
+			PUSH RCX 
+
+			MOV RBX, buff_generic ; pointer to buff_generic, 
+			MOV RSI, RAX ; source- RAX
+			MOV RDI, RBX ; dest- buff_generic
+			CALL copy_string ;copy string from RAX into buff_generic
+
+			MOV AL, BYTE[buff_generic] ;
+			CMP AL, 0
+			JE .BADG_READ_ID ;send user back if they put in an empty string
+
+			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
+			.BADG_ID_FIRST_LETTER_CHECK:
+			CMP AL, 'b'
+			JNE .INCORRECT_BADG_ID ; MAKE SURE FIRST CHARACTER IS p
+			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
+			
+			; The next 6 characters must all be digits
+			MOV RCX, 6 ; counter to check next 7 characters
+			.BADG_ID_FORMAT_CHECK_LOOP:
+			;START LOOP
+				CMP AL, '0'
+				JL .INCORRECT_STAFF_ID
+				CMP AL, '9'
+				JG .INCORRECT_STAFF_ID
+				
+				SHR RAX, 8
+				DEC RCX	; decrement counter
+				CMP RCX, 0
+				JNE .BADG_ID_FORMAT_CHECK_LOOP  ; Next step in loop
+			;END LOOP
+			.BADG_ID_END_LOOP:
+			CMP AL, 0	; the last character must be a null terminator
+			JE .END_BADG_ID_FORMAT_CHECK
+			
+			.INCORRECT_BADG_ID:
+			MOV RDI, str_badg_id_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			JMP .BADG_READ_ID
+			
+			.END_BADG_ID_FORMAT_CHECK:
+			POP RCX
+			POP RBX
+			POP RAX
+			POP RSI
+		;END BLOCK
+		MOV RSI, RAX ;source
+		MOV RDI, RCX ;destination
+		CALL copy_string
+		ADD RCX, size_badg_id ; add the bytes reserved for staff ID
+		; END BLOCK
+
+		;END BLOCK
 	.BADG_READ_HOME:
 		; Read a byte for badger's home setting
 		MOV RDI, str_prompt_badg_home
@@ -427,6 +520,7 @@ ADD_BADGER:
 		CMP RAX, 0
 		JL .BADG_HOME_ERR
 		CMP RAX, 3 ; only 0, 1 or 2
+		JL .BADG_HOME_NOERR
 		.BADG_HOME_ERR:
 			MOV RDI, str_prompt_badg_wrong_home
 			CALL print_string_new
@@ -452,8 +546,62 @@ ADD_BADGER:
 		ADD RCX, size_badg_mass
 	
 	.BADG_READ_STRIPES:
+		MOV RDI, str_prompt_badg_stripes
+		CALL print_string_new
+		CALL read_uint_new
+		CMP RAX, 0
+		JG .BADG_STRIPES_NOERR
+		.BADG_STRIPES_ERR:
+			MOV RDI, str_prompt_badg_wrong_stripes
+			CALL print_string_new
+			JMP .BADG_READ_STRIPES
+		.BADG_STRIPES_NOERR:
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL
+		ADD RCX, size_badg_stripes
 	
-	
+	.BADG_READ_SEX:
+		MOV RDI, str_prompt_badg_sex
+		CALL print_string_new
+		CALL read_uint_new
+		CMP RAX, 0
+		JL .BADG_SEX_ERR
+		CMP RAX, 3
+		JL .BADG_SEX_NOERR
+		.BADG_SEX_ERR:
+			MOV RDI, str_prompt_badg_wrong_sex
+			CALL print_string_new
+			JMP .BADG_READ_SEX
+		.BADG_SEX_NOERR:
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL
+		ADD RCX, size_badg_sex
+
+	.BADG_READ_MONTH:
+		MOV RDI, str_prompt_badg_birth_mon
+		CALL print_string_new
+		CALL read_uint_new
+		CMP RAX, 0
+		JL .BADG_MON_ERR
+		CMP RAX, 12 ; 0 - 11 valid values for months
+		JL .BADG_SEX_NOERR
+		.BADG_MON_ERR:
+			MOV RDI, str_prompt_badg_wrong_sex
+			CALL print_string_new
+			JMP .BADG_READ_MONTH
+		.BADG_MON_NOERR:
+		MOV RSI, RAX
+		MOV BYTE[RCX], AL
+		ADD RCX, size_badg_mon
+
+	.BADG_READ_YEAR:
+		; Badger year of birth
+		MOV RDI, str_prompt_badg_birth_year
+		CALL print_string_new
+		CALL read_uint_new
+		MOV RSI, RAX
+		MOV DWORD[RCX], EAX
+		ADD RCX, size_year ;4B
 
 
 	.BADG_END_ADD:
@@ -466,7 +614,7 @@ ADD_BADGER:
 	; END BLOCK
 
 PRINT_NUMBER_STAFF:
-; START BLOCK
+	; START BLOCK
 	PUSH RDI
 	; No parameters
 	; Displays number of users in list (to STDOUT)
@@ -477,10 +625,10 @@ PRINT_NUMBER_STAFF:
 	CALL print_nl_new
 	POP RDI
 	RET
-;END BLOCK
+	;END BLOCK
 	
 LIST_STAFF:
-; START BLOCK
+	; START BLOCK
 	; Takes no parameters (staff members is global)
 	; Lists full details of all staff members in the array
     PUSH RBX
@@ -631,10 +779,10 @@ LIST_STAFF:
     POP RCX
     POP RBX 
 	RET
-; END BLOCK
+	; END BLOCK
 	
 DELETE_STAFF:
-;START BLOCK
+	;START BLOCK
 	PUSH RAX
 	PUSH RBX
     PUSH RCX
@@ -713,9 +861,7 @@ DELETE_STAFF:
 	POP RBX
 	POP RAX
 	RET
-;END BLOCK	
-
-
+	;END BLOCK	
 
 LIST_BADGERS:
 	RET
@@ -848,8 +994,16 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION5:
+		.OPTION5: ;DELETE BADGER
 			; START BLOCK
+			MOV RDX, [current_number_badg]
+			CMP RDX, 0
+			JG .BADG_HAS_RECORDS
+			MOV RDI, str_prompt_badg_empty
+			CALL print_string_new
+			JMP .MENULOOP
+			.BADG_HAS_RECORDS:
+			CALL DELETE_BADGER
 			JMP .MENULOOP
 			; END BLOCK
 		
@@ -879,5 +1033,3 @@ main:
 		RET ; End function main
 		; END BLOCK
 	; END BLOCK
-
-	
