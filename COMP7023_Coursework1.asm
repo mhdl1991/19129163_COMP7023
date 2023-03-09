@@ -247,7 +247,7 @@ str_badg_art DB \
 	size_badg_stripes EQU 1
 	size_badg_sex EQU 1
 	size_badg_mon EQU 1
-	size_badg_yr EQU 2
+	size_badg_yr EQU 4
 	; 9B staff ID
 	
 	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
@@ -990,11 +990,13 @@ LIST_BADGERS:
 		.PRINT_BADG_NAME:
 			MOV RDI, str_disp_badg_name
 			CALL print_string_new
+			CALL print_nl_new
 			LEA RDI, [RSI + size_delete_flag]
 			CALL print_string_new
 		.PRINT_BADG_ID:
 			MOV RDI, str_disp_badg_id
 			CALL print_string_new
+			CALL print_nl_new
 			LEA RDI, [RSI + size_delete_flag + size_name_string]
 			CALL print_string_new
 		.PRINT_BADG_HOME:
@@ -1009,7 +1011,6 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_home_0
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_HOME
 
@@ -1019,10 +1020,8 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_home_1
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_HOME
-			
 			
 			.BADG_SETT_2:
 			CMP RDI, 2
@@ -1030,7 +1029,6 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_home_2
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_HOME
 			
@@ -1038,11 +1036,11 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_home_ERR
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_HOME
 			;END BLOCK
 		.END_PRINT_BADG_HOME:
+		CALL print_nl_new
 		.PRINT_BADG_MASS:
 			MOV RDI, str_disp_badg_mass
 			CALL print_string_new
@@ -1062,7 +1060,7 @@ LIST_BADGERS:
 			MOVZX RAX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
 			MOVZX RBX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
 			MUL RBX
-			MOV RDI, RBX
+			MOV RDI, RAX
 			CALL print_uint_new
 			CALL print_nl_new
 		.PRINT_BADG_SEX:
@@ -1076,7 +1074,6 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_sex_0
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_SEX
 			
@@ -1086,7 +1083,6 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_sex_1
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_SEX
 			
@@ -1096,7 +1092,6 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_sex_2
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_SEX
 			
@@ -1104,10 +1099,10 @@ LIST_BADGERS:
 			PUSH RDI
 			MOV RDI, str_badg_sex_ERR
 			CALL print_string_new
-			CALL print_nl_new
 			POP RDI
 			JMP .END_PRINT_BADG_SEX
 		.END_PRINT_BADG_SEX:
+		CALL print_nl_new
 		.PRINT_BADG_DOB:
 			; Print month and year together
 			MOV RDI, str_disp_badg_born
