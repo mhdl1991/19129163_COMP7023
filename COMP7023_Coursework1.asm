@@ -28,6 +28,31 @@
 GLOBAL main
 
 SECTION .data
+
+str_badg_art DB \
+"WELCOME TO JONNY'S NOCTURNAL ZOO.", 10,\
+"                                                                                        ",10,\
+"                    ████                                                                ", 10, \
+"                  ██░░░░██                                                              ",10,\
+"              ████░░██████████              ████████████                                ",10,\
+"            ██    ░░░░░░░░░░░░██████████████░░░░░░░░░░░░████████████████                ",10,\
+"          ██    ░░░░░░      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              ",10,\
+"        ██    ██░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██            ",10,\
+"      ██    ░░░░            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██          ",10,\
+"    ██░░░░░░░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+"    ██░░░░          ░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+"      ██░░      ░░░░████  ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+"        ████████████      ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+"                            ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░░░████    ",10,\
+"                          ██░░░░░░░░░░░░░░░░░░████████░░░░░░░░░░░░░░░░░░██  ████░░██    ",10,\
+"                          ██░░░░░░░░████░░░░██        ██░░░░░░░░░░░░░░░░░░██    ██      ",10,\
+"                        ██░░░░░░░░██  ██░░░░░░██    ██░░░░░░░░████░░░░░░░░░░██          ",10,\
+"                        ██░░░░░░░░██    ██░░░░██    ██░░░░░░░░██  ██░░░░░░░░░░██        ",10,\
+"                      ██░░░░░░░░░░██  ██░░░░░░██      ██░░░░░░██    ██░░░░░░░░██        ",10,\
+"                    ██░░░░░░░░░░██    ██░░░░██      ██░░░░░░██      ██░░░░░░██          ",10,\
+"                      ██████████      ██████          ████████        ██████            ",10,\
+"                                                                                        ",10,\
+
 	; variables for messages to user
 	
 	; main menu variables
@@ -100,7 +125,20 @@ SECTION .data
 							"0 - Male", 10, \
 							"1 - Female", 10, \
 							"2 - Intersex/Other", 10, 0
-	str_prompt_badg_birth_mon  DB  "What month was the badger born", 10, 0
+	str_prompt_badg_birth_mon  DB  "What month was the badger born", 10, \
+								"0 - January", 10, \
+								"1 - February", 10, \
+								"2 - March", 10, \
+								"3 - April", 10, \
+								"4 - May", 10, \
+								"5 - June", 10, \
+								"6 - July", 10, \
+								"7 - August", 10, \
+								"8 - September", 10, \
+								"9 - October", 10, \
+								"10 - November", 10, \
+								"11 - December", 10, 0
+
 	str_prompt_badg_birth_year  DB  "What year was the badger born", 10, 0
 	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, 0
 	
@@ -135,18 +173,18 @@ SECTION .data
 	str_prompt_badg_wrong_mon DB "ERROR- Invalid value entered for birth month",10, 0
 
 	; Months
-	str_mon_0 DB, "January", 0
-	str_mon_1 DB, "February", 0
-	str_mon_2 DB, "March", 0
-	str_mon_3 DB, "April", 0
-	str_mon_4 DB, "May", 0
-	str_mon_5 DB, "June", 0
-	str_mon_6 DB, "July", 0
-	str_mon_7 DB, "August", 0
-	str_mon_8 DB, "September", 0
-	str_mon_9 DB, "October", 0
-	str_mon_10 DB, "November", 0
-	str_mon_11 DB, "December", 0
+	str_mon_0 DB "January", 0
+	str_mon_1 DB "February", 0
+	str_mon_2 DB "March", 0
+	str_mon_3 DB "April", 0
+	str_mon_4 DB "May", 0
+	str_mon_5 DB "June", 0
+	str_mon_6 DB "July", 0
+	str_mon_7 DB "August", 0
+	str_mon_8 DB "September", 0
+	str_mon_9 DB "October", 0
+	str_mon_10 DB "November", 0
+	str_mon_11 DB "December", 0
 
 
 
@@ -201,7 +239,7 @@ SECTION .data
 	
 	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
 	
-	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_num_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
+	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
 	current_year EQU 2023 ; for current salary calculation
 	max_number_staff EQU 100
@@ -219,6 +257,83 @@ SECTION .bss
 	arr_badgers: RESB size_badg_array ; 88B/badger, 500 maximum badgers
 	buff_generic: RESB size_name_string ; used for testing IDs. maybe don't need to make it big
 SECTION .text
+
+BIG_HONKING_WELCOME_MESSAGE:
+	; START BLOCK
+	PUSH RBX
+	PUSH RCX
+	PUSH RDX
+	PUSH RSI
+	MOV RDI, str_badg_art
+	CALL print_string_new
+	POP RSI
+	POP RDX
+	POP RCX
+	POP RBX
+	RET
+	; END BLOCK
+STAFF_ID_FORMAT_CHECK_FUNCTION:
+	; gonna try splitting this out into it's own function
+	PUSH RSI
+	PUSH RAX
+	PUSH RBX
+	PUSH RCX
+	.STAFF_MEMBER_READ_ID:
+		;START BLOCK
+		; Staff member ID
+		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
+		CALL print_string_new ; print message
+		CALL read_string_new ; get input from user
+		;END BLOCK
+	
+	.STAFF_ID_FORMAT_CHECK:
+		;START BLOCK
+		MOV RBX, buff_generic ; pointer to buff_generic, 
+		MOV RSI, RAX ; source- RAX
+		MOV RDI, RBX ; dest- buff_generic
+		CALL copy_string ;copy string from RAX into buff_generic; retrieve it from there 
+
+		MOV AL, BYTE[buff_generic]
+		CMP AL, 0
+		JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
+
+		MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
+		.STAFF_ID_FIRST_LETTER_CHECK:
+			CMP AL, 'p'
+			JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
+			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
+		
+		; The next 7 characters must all be digits
+		MOV RCX, 7 ; counter to check next 7 characters
+		.STAFF_ID_FORMAT_CHECK_LOOP:
+			;START LOOP
+			CMP AL, '0'
+			JL .INCORRECT_STAFF_ID
+			CMP AL, '9'
+			JG .INCORRECT_STAFF_ID
+			
+			SHR RAX, 8
+			DEC RCX	; decrement counter
+			CMP RCX, 0
+			JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
+			;END LOOP
+		.STAFF_ID_END_LOOP:
+		CMP AL, 0	; the last character must be a null terminator
+		JE .END_STAFF_ID_FORMAT_CHECK
+		
+		.INCORRECT_STAFF_ID:
+			MOV RDI, str_staff_id_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			JMP .STAFF_MEMBER_READ_ID
+		; END BLOCK
+
+	.END_STAFF_ID_FORMAT_CHECK:
+	POP RCX
+	POP RBX
+	POP RAX
+	POP RSI
+	RET
 
 
 ADD_STAFF_MEMBER:
@@ -281,68 +396,73 @@ ADD_STAFF_MEMBER:
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
 	.STAFF_MEMBER_READ_ID:
-		;START BLOCK
-		; Staff member ID
-		MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
-		CALL print_string_new ; print message
-		CALL read_string_new ; get input from user
-		; TEST IF STAFF ID IS IN CORRECT FORMAT.
-		.STAFF_ID_FORMAT_CHECK:
-		;START BLOCK
-			PUSH RSI
-			PUSH RAX
-			PUSH RBX
-			PUSH RCX 
+		; ;START BLOCK
+		; ; Staff member ID
+		; MOV RDI, str_prompt_staff_id ; PROMPT USER TO ENTER STAFF ID
+		; CALL print_string_new ; print message
+		; CALL read_string_new ; get input from user
+		; ; TEST IF STAFF ID IS IN CORRECT FORMAT.
+		; .STAFF_ID_FORMAT_CHECK:
+		; 	;START BLOCK
+		; 	PUSH RSI
+		; 	PUSH RAX
+		; 	PUSH RBX
+		; 	PUSH RCX 
 
-			MOV RBX, buff_generic ; pointer to buff_generic, 
-			MOV RSI, RAX ; source- RAX
-			MOV RDI, RBX ; dest- buff_generic
-			CALL copy_string ;copy string from RAX into buff_generic
+		; 	MOV RBX, buff_generic ; pointer to buff_generic, 
+		; 	MOV RSI, RAX ; source- RAX
+		; 	MOV RDI, RBX ; dest- buff_generic
+		; 	CALL copy_string ;copy string from RAX into buff_generic
 
-			MOV AL, BYTE[buff_generic] ;
-			CMP AL, 0
-			JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
+		; 	MOV AL, BYTE[buff_generic] ;
+		; 	CMP AL, 0
+		; 	JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
 
-			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
-			.STAFF_ID_FIRST_LETTER_CHECK:
-			CMP AL, 'p'
-			JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
-			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
+		; 	MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
+		; 	.STAFF_ID_FIRST_LETTER_CHECK:
+		; 	CMP AL, 'p'
+		; 	JNE .INCORRECT_STAFF_ID ; MAKE SURE FIRST CHARACTER IS p
+		; 	SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
 			
-			; The next 7 characters must all be digits
-			MOV RCX, 7 ; counter to check next 7 characters
-			.STAFF_ID_FORMAT_CHECK_LOOP:
-			;START LOOP
-				CMP AL, '0'
-				JL .INCORRECT_STAFF_ID
-				CMP AL, '9'
-				JG .INCORRECT_STAFF_ID
+		; 	; The next 7 characters must all be digits
+		; 	MOV RCX, 7 ; counter to check next 7 characters
+		; 	.STAFF_ID_FORMAT_CHECK_LOOP:
+		; 	;START LOOP
+		; 		CMP AL, '0'
+		; 		JL .INCORRECT_STAFF_ID
+		; 		CMP AL, '9'
+		; 		JG .INCORRECT_STAFF_ID
 				
-				SHR RAX, 8
-				DEC RCX	; decrement counter
-				CMP RCX, 0
-				JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
-			;END LOOP
-			.STAFF_ID_END_LOOP:
-			CMP AL, 0	; the last character must be a null terminator
-			JE .END_STAFF_ID_FORMAT_CHECK
+		; 		SHR RAX, 8
+		; 		DEC RCX	; decrement counter
+		; 		CMP RCX, 0
+		; 		JNE .STAFF_ID_FORMAT_CHECK_LOOP  ; Next step in loop
+		; 	;END LOOP
+		; 	.STAFF_ID_END_LOOP:
+		; 	CMP AL, 0	; the last character must be a null terminator
+		; 	JE .END_STAFF_ID_FORMAT_CHECK
 			
-			.INCORRECT_STAFF_ID:
-			MOV RDI, str_staff_id_ERR
-			CALL print_string_new
-			CALL print_nl_new
-			JMP .STAFF_MEMBER_READ_ID
+		; 	.INCORRECT_STAFF_ID:
+		; 	MOV RDI, str_staff_id_ERR
+		; 	CALL print_string_new
+		; 	CALL print_nl_new
+		; 	JMP .STAFF_MEMBER_READ_ID
 			
-			.END_STAFF_ID_FORMAT_CHECK:
-			POP RCX
-			POP RBX
-			POP RAX
-			POP RSI
-		;END BLOCK
-		MOV RSI, RAX ;source
+		; 	.END_STAFF_ID_FORMAT_CHECK:
+		; 	POP RCX
+		; 	POP RBX
+		; 	POP RAX
+		; 	POP RSI
+		; 	;END BLOCK
+		CALL STAFF_ID_FORMAT_CHECK_FUNCTION ;this should populate buff_generic
+
+		PUSH RBX
+		MOV RBX, buff_generic
+		MOV RSI, RBX ;source
 		MOV RDI, RCX ;destination
 		CALL copy_string
 		ADD RCX, size_staff_id ; add the bytes reserved for staff ID
+		POP RBX
 		; END BLOCK
 	
 	.STAFF_MEMBER_READ_DEPT:
@@ -410,19 +530,18 @@ ADD_BADGER:
     PUSH RDI
     PUSH RSI
 
-
-	MOV RCX, arr_badgers
-	MOV RBX, 0
+	MOV RCX, arr_badgers ; base address to start with
+	MOV RBX, 0 ; offset from base address to insert into
 	.BADG_LOOP_FIND_EMPTY:
 		;START LOOP
-		CMP BYTE[RCX], 0
+		CMP BYTE[RCX], 0 ; check for the flag 0
 		JE .BADG_SET_FLAG ; found an empty spot Let's gooooooo
-		ADD RCX, size_badg_record ; skip blocks of size_staff_record 
+		ADD RCX, size_badg_record ; skip blocks of size_badg_record 
 		ADD RBX, size_badg_record
 		CMP RBX, size_badg_array
 		JL .BADG_LOOP_FIND_EMPTY ; keep going
 		PUSH RAX
-		MOV RDI, str_prompt_badg_full
+		MOV RDI, str_prompt_badg_full ; no empty spaces found
 		CALL print_string_new
 		POP RAX
 		JMP .BADG_END_ADD ;buddy, just get out.
@@ -480,9 +599,9 @@ ADD_BADGER:
 			.BADG_ID_FORMAT_CHECK_LOOP:
 			;START LOOP
 				CMP AL, '0'
-				JL .INCORRECT_STAFF_ID
+				JL .INCORRECT_BADG_ID
 				CMP AL, '9'
-				JG .INCORRECT_STAFF_ID
+				JG .INCORRECT_BADG_ID
 				
 				SHR RAX, 8
 				DEC RCX	; decrement counter
@@ -519,7 +638,7 @@ ADD_BADGER:
 		CALL read_uint_new ; stored in RAX
 		CMP RAX, 0
 		JL .BADG_HOME_ERR
-		CMP RAX, 3 ; only 0, 1 or 2
+		CMP RAX, 3 ; only 0, 1 or 2 are accepted values
 		JL .BADG_HOME_NOERR
 		.BADG_HOME_ERR:
 			MOV RDI, str_prompt_badg_wrong_home
@@ -528,7 +647,7 @@ ADD_BADGER:
 		.BADG_HOME_NOERR:
 		MOV RSI, RAX
 		MOV BYTE[RCX], AL
-		ADD RCX, size_badg_home
+		ADD RCX, size_badg_home ;this could easily be INC RCX since the badger habitat is just 1B rn, 
 
 	.BADG_READ_MASS:
 		MOV RDI, str_prompt_badg_mass
@@ -566,7 +685,7 @@ ADD_BADGER:
 		CALL read_uint_new
 		CMP RAX, 0
 		JL .BADG_SEX_ERR
-		CMP RAX, 3
+		CMP RAX, 3 ; only 0 1 or 2
 		JL .BADG_SEX_NOERR
 		.BADG_SEX_ERR:
 			MOV RDI, str_prompt_badg_wrong_sex
@@ -584,7 +703,7 @@ ADD_BADGER:
 		CMP RAX, 0
 		JL .BADG_MON_ERR
 		CMP RAX, 12 ; 0 - 11 valid values for months
-		JL .BADG_SEX_NOERR
+		JL .BADG_MON_NOERR
 		.BADG_MON_ERR:
 			MOV RDI, str_prompt_badg_wrong_sex
 			CALL print_string_new
@@ -601,8 +720,18 @@ ADD_BADGER:
 		CALL read_uint_new
 		MOV RSI, RAX
 		MOV DWORD[RCX], EAX
-		ADD RCX, size_year ;4B
+		ADD RCX, size_badg_yr ;4B
 
+	.BADG_READ_KEEPER_ID:
+		; Badger keeper
+		CALL STAFF_ID_FORMAT_CHECK_FUNCTION ;this should populate buff_generic
+		PUSH RBX
+		MOV RBX, buff_generic
+		MOV RSI, RBX ;source
+		MOV RDI, RCX ;destination
+		CALL copy_string
+		ADD RCX, size_staff_id ; add the bytes reserved for staff ID
+		POP RBX
 
 	.BADG_END_ADD:
 	POP RSI
@@ -612,6 +741,10 @@ ADD_BADGER:
     POP RBX 
 	RET
 	; END BLOCK
+
+
+
+
 
 PRINT_NUMBER_STAFF:
 	; START BLOCK
@@ -868,7 +1001,34 @@ LIST_BADGERS:
 	
 
 DELETE_BADGER:
+	;START BLOCK
+	PUSH RAX
+	PUSH RBX
+	PUSH RCX
+	PUSH RDX
+	PUSH RDI
+	PUSH RSI
+
+	MOV RDI, str_prompt_badg_delete_id
+	CALL print_string_new
+	CALL read_string_new
+
+	MOV RBX, buff_generic
+	MOV RSI, RAX
+	MOV RDI, RBX
+	CALL copy_string
+
+
+
+
+	POP RSI
+	POP RDI
+	POP RDX
+	POP RCX
+	POP RBX
+	POP RAX
 	RET
+	;END BLOCK
 	
 AGE_CALCULATION:
 	; if (currentMonth – birthMonth) >= 0
@@ -906,6 +1066,8 @@ main:
 		PUSH RBP
 		MOV RBP, RSP
 		SUB RSP, 32
+
+	CALL BIG_HONKING_WELCOME_MESSAGE
 
 	.MENULOOP:
 		; START BLOCK
