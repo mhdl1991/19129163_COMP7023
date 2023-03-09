@@ -169,6 +169,9 @@ str_badg_art DB \
 	str_disp_badg_stripiness DB "Stripiness: ", 0
 	str_disp_badg_keeper DB "Keeper ID: ", 0
 
+
+	str_number_badg DB "Total number of Badgers: ", 10, 0
+
 	; delete badger
 	str_prompt_badg_empty DB "NO BADGERS?", 10, 0
 	str_prompt_badg_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
@@ -198,8 +201,6 @@ str_badg_art DB \
 	str_mon_10 DB "November", 0
 	str_mon_11 DB "December", 0
 	str_mon_12 DB "Not a real month", 0 
-
-
 
 	; IS_DELETED 1B
 	;   Surname 64B
@@ -1358,13 +1359,33 @@ DELETE_BADGER:
 	RET
 	;END BLOCK
 	
+
+
 MAIN_MENU_OPTIONS_PROMPT:
     PUSH RDI
     MOV RDI, str_main_menu
     CALL print_string_new
     POP RDI
 	RET
-	
+
+PRINT_NUMBER_BADG:
+	; START BLOCK
+	PUSH RDI
+	; No parameters
+	; Displays number of badgers in list (to STDOUT)
+	MOV RDI, str_number_badg
+	CALL print_string_new
+	MOV RDI, [current_number_badg]
+	CALL print_uint_new
+	CALL print_nl_new
+	POP RDI
+	RET
+	;END BLOCK	
+
+
+
+
+
 main:
     mov rbp, rsp; for correct debugging
 	;START BLOCK
@@ -1477,8 +1498,10 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION6:
+		.OPTION6: ; LIST BADGERS
 			; START BLOCK
+			CALL print_nl_new
+			CALL LIST_BADGERS
 			JMP .MENULOOP
 			; END BLOCK
 		
