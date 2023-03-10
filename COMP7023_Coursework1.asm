@@ -93,6 +93,7 @@ str_badg_art DB \
 	
 	str_number_staff DB "Total number of Staff: ", 10, 0
 	
+	str_staff_email_len_ERR DB "Please enter only 63 characters.", 10,0
 	
 	; delete staff member
 	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
@@ -203,6 +204,10 @@ str_badg_art DB \
 	str_mon_10 DB "November", 0
 	str_mon_11 DB "December", 0
 	str_mon_12 DB "Not a real month", 0 
+
+
+	str_email_check DB, "@jnz.co.uk", 0
+
 
 	; IS_DELETED 1B
 	;   Surname 64B
@@ -479,18 +484,42 @@ ADD_STAFF_MEMBER:
 		
 		POP RBX
 	.STAFF_MEMBER_READ_EMAIL:
+		PUSH RAX
+		PUSH RBX
+
+		JMP .EMAIL_TAKE_INPUT
+		
+		.EMAIL_LEN_ERR:
+		MOV RDI, str_staff_email_len_ERR
+		CALL print_string_new
+		JMP .EMAIL_TAKE_INPUT
+
+		.EMAIL_FORMAT_ERR:
+
 		; Staff member email address
+		.EMAIL_TAKE_INPUT:
 		MOV RDI, str_prompt_staff_mail
 		CALL print_string_new
 		CALL read_string_new
 		.EMAIL_FORMAT_CHECK:
 
+		; length check
+		MOV RBX, RAX
+		CALL string_length
+		CMP RAX, 63
+		JG .EMAIL_LEN_ERR
+
+		MOV RSI, RBX
+		LEA RSI
 
 
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
 		ADD RCX, size_name_string 
+
+		POP RBX
+		POP RAX
 
 	; FINALLY ADDED ALL THE STAFF DETAILS
 
