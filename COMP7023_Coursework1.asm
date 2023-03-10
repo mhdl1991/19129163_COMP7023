@@ -99,6 +99,9 @@ str_badg_art DB \
 	
 	str_len_ERR DB "Too long! keep it less than 63B", 10, 0
 
+	str_staff_ID_len_ERR DB "Staff ID should be 8 characters", 10, 0
+	str_badg_ID_len_ERR DB "Staff ID should be 7 characters", 10, 0
+
 
 	; delete staff member
 	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
@@ -333,13 +336,27 @@ BADG_ID_FORMAT_CHECK_FUNCTION:
 
 	CALL read_string_new
 
-	.BADG_ID_FORMAT_CHECK:
+	.COPY_BADG_ID_TO_BUFF:
 		;START BLOCK
+		PUSH RAX
 		MOV RBX, buff_generic ;stored in buff_generic
 		MOV RSI, RAX 
 		MOV RDI, RBX
 		CALL copy_string
+		POP RAX
+		;END  BLOCK
+	
+	.BADG_ID_LEN_CHECK:
+		MOV RBX, RAX
+		CALL STR_LEN
+		CMP RAX, 7
+		JE .BADG_ID_FORMAT_CHECK
+		MOV RDI, str_badg_ID_len_ERR
+		CALL print_string_new
+		JMP .BADG_READ_ID
 		
+	.BADG_ID_FORMAT_CHECK:
+		;START BLOCK
 		;can't enter empty string
 		MOV AL, BYTE[buff_generic]
 		CMP AL, 0
@@ -385,8 +402,10 @@ STAFF_ID_FORMAT_CHECK_FUNCTION:
 	PUSH RBX
 	PUSH RCX
 
+	.STAFF_READ_ID_START:
 	CMP RDX, 0
 	JNE .STAFF_MEMBER_READ_ID
+
 
 	.KEEPER_READ_ID:
 		;START BLOCK
@@ -406,14 +425,27 @@ STAFF_ID_FORMAT_CHECK_FUNCTION:
 
 	.END_ID_PROMPT:
 	CALL read_string_new ; get input from user
+
+	.COPY_ID_TO_BUFF:
+	PUSH RAX
+	MOV RBX, buff_generic ; pointer to buff_generic, 
+	MOV RSI, RAX ; source- RAX
+	MOV RDI, RBX ; dest- buff_generic
+	CALL copy_string ;copy string from RAX into buff_generic; retrieve it from there 
+	POP RAX
+
+	.STAFF_ID_LEN_CHECK:
+		MOV RBX, RAX
+		CALL STR_LEN
+		CMP RAX, 8
+		JE .STAFF_ID_FORMAT_CHECK
+		MOV RDI, str_staff_ID_len_ERR
+		CALL print_string_new
+		JMP .STAFF_READ_ID_START 
 	
 	.STAFF_ID_FORMAT_CHECK:
-		;START BLOCK
-		MOV RBX, buff_generic ; pointer to buff_generic, 
-		MOV RSI, RAX ; source- RAX
-		MOV RDI, RBX ; dest- buff_generic
-		CALL copy_string ;copy string from RAX into buff_generic; retrieve it from there 
-
+		; START BLOCK
+		MOV RBX, buff_generic
 		MOV AL, BYTE[buff_generic]
 		CMP AL, 0
 		JE .STAFF_MEMBER_READ_ID ;send user back if they put in an empty string
