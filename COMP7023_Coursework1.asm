@@ -282,6 +282,27 @@ SECTION .bss
 	buff_generic: RESB size_name_string ; used for testing IDs. maybe don't need to make it big
 SECTION .text
 
+STR_LEN:
+    PUSH RCX
+    PUSH RBX
+    PUSH RDI
+    SUB RCX, RCX
+    NOT RCX				; MAX SIZE 
+    MOV AL, 0 			; LOOK FOR THE NULL TERMINATOR
+    MOV RDI, RBX		; start of string
+    CLD
+    REPNE SCASB			; search
+    SUB RDI, RBX		; REMOVE START OF STRING
+    DEC RDI				; allow for the null terminator
+    MOV RAX, RDI
+    
+    POP RDI
+    POP RBX
+    POP RCX
+    RET
+
+
+
 BIG_HONKING_WELCOME_MESSAGE:
 	; START BLOCK
 	PUSH RDI
@@ -508,7 +529,7 @@ ADD_STAFF_MEMBER:
 		.EMAIL_FORMAT_CHECK:
 			; length check
 			MOV RBX, RAX
-			CALL string_length
+			CALL STR_LEN
 			CMP RAX, 63
 			JG .EMAIL_LEN_ERR
 
