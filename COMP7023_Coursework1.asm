@@ -1366,7 +1366,8 @@ PRINT_BADGER_RECORD:
 			CMP RBX, RDI ; (is currentMonth >= birthMonth)
 			JGE .DONTDECREMENT
 			SUB RAX, 1 ;if it is then decrement by 1
-			.DONTDECREMENT:			
+			.DONTDECREMENT:
+			MOV RDI, RAX			
 			CALL print_uint_new
 			CALL print_nl_new
 			POP RBX
