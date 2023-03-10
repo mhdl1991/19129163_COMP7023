@@ -319,6 +319,66 @@ BIG_HONKING_WELCOME_MESSAGE:
 	RET
 	; END BLOCK
 
+BADG_ID_FORMAT_CHECK_FUNCTION:
+	PUSH RSI
+	PUSH RAX
+	PUSH RBX
+	PUSH RCX
+	
+	.BADG_READ_ID:
+		; START BLOCK
+		MOV RDI, str_prompt_badg_id
+		CALL print_string_new
+		; END BLOCK
+
+	CALL read_string_new
+
+	.BADG_ID_FORMAT_CHECK:
+		;START BLOCK
+		MOV RBX, buff_generic ;stored in buff_generic
+		MOV RSI, RAX 
+		MOV RDI, RBX
+		CALL copy_string
+		
+		;can't enter empty string
+		MOV AL, BYTE[buff_generic]
+		CMP AL, 0
+		JE .BADG_READ_ID
+
+		MOV RAX, QWORD[RBX]
+		.BADG_ID_FIRST_LETTER_CHECK:
+			CMP AL, 'b'
+			JNE .BADG_ID_ERR ; MAKE SURE FIRST CHARACTER IS p
+			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
+		MOV RCX, 6
+		.BADG_ID_FORMAT_CHECK_LOOP:
+			;START LOOP
+			CMP AL, '0'
+			JL .BADG_ID_ERR
+			CMP AL, '9'
+			JG .BADG_ID_ERR
+			
+			SHR RAX, 8
+			DEC RCX	; decrement counter
+			CMP RCX, 0
+			JNE .BADG_ID_FORMAT_CHECK_LOOP  ; Next step in loop
+			;END LOOP
+		.BADG_ID_END_LOOP:
+		CMP AL, 0
+		JE .END_BADG_ID_FORMAT_CHECK
+		.BADG_ID_ERR:
+			MOV RDI, str_badg_id_ERR
+			CALL print_string_new
+			CALL print_nl_new
+			JMP .BADG_READ_ID
+		;END BLOCK
+	.END_BADG_ID_FORMAT_CHECK:
+	POP RCX
+	POP RBX
+	POP RAX
+	POP RSI
+	RET
+
 STAFF_ID_FORMAT_CHECK_FUNCTION:
 	PUSH RSI
 	PUSH RAX
@@ -650,68 +710,15 @@ ADD_BADGER:
 
 	.BADG_READ_ID:
 		;START BLOCK
-		; Staff member ID
-		MOV RDI, str_prompt_badg_id ; PROMPT USER TO ENTER STAFF ID
-		CALL print_string_new ; print message
-		CALL read_string_new ; get input from user
+		CALL BADG_ID_FORMAT_CHECK_FUNCTION
 
-		; TEST IF BADGER ID IS IN CORRECT FORMAT
-		.BADG_ID_FORMAT_CHECK:
-		;START BLOCK
-			PUSH RSI
-			PUSH RAX
-			PUSH RBX
-			PUSH RCX 
-
-			MOV RBX, buff_generic ; pointer to buff_generic, 
-			MOV RSI, RAX ; source- RAX
-			MOV RDI, RBX ; dest- buff_generic
-			CALL copy_string ;copy string from RAX into buff_generic
-
-			MOV AL, BYTE[buff_generic] ;
-			CMP AL, 0
-			JE .BADG_READ_ID ;send user back if they put in an empty string
-
-			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
-			.BADG_ID_FIRST_LETTER_CHECK:
-				CMP AL, 'b'
-				JNE .INCORRECT_BADG_ID ; MAKE SURE FIRST CHARACTER IS p
-				SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
-				
-			; The next 6 characters must all be digits
-			MOV RCX, 6 ; counter to check next 7 characters
-			.BADG_ID_FORMAT_CHECK_LOOP:
-			;START LOOP
-				CMP AL, '0'
-				JL .INCORRECT_BADG_ID
-				CMP AL, '9'
-				JG .INCORRECT_BADG_ID
-				
-				SHR RAX, 8
-				DEC RCX	; decrement counter
-				CMP RCX, 0
-				JNE .BADG_ID_FORMAT_CHECK_LOOP  ; Next step in loop
-			;END LOOP
-			.BADG_ID_END_LOOP:
-				CMP AL, 0	; the last character must be a null terminator
-				JE .END_BADG_ID_FORMAT_CHECK
-			
-			.INCORRECT_BADG_ID:
-				MOV RDI, str_badg_id_ERR
-				CALL print_string_new
-				CALL print_nl_new
-				JMP .BADG_READ_ID
-			
-			.END_BADG_ID_FORMAT_CHECK:
-			POP RCX
-			POP RBX
-			POP RAX
-			POP RSI
-		;END BLOCK
-		MOV RSI, RAX ;source
-		MOV RDI, RCX ;destination
+		PUSH RBX
+		MOV RBX, buff_generic
+		MOV RSI, RBX ; source
+		MOV RDI, RCX ; destination
 		CALL copy_string
-		ADD RCX, size_badg_id ; add the bytes reserved for staff ID
+		ADD RCX, size_badg_id
+		POP RBX
 		; END BLOCK
 
 		;END BLOCK
