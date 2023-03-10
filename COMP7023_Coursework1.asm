@@ -97,6 +97,9 @@ str_badg_art DB \
 	str_staff_email_len_ERR DB "Please enter only 63 characters.", 10,0
 	str_staff_email_fmt_ERR DB "Emails should end in @jnz.co.uk", 10,0
 	
+	str_len_ERR DB "Too long! keep it less than 63B", 10, 0
+
+
 	; delete staff member
 	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
 	str_prompt_staff_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
@@ -422,6 +425,12 @@ ADD_STAFF_MEMBER:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
 		INC RCX ; increment RCX by 1 byte
 		
+
+	PUSH RBX
+	JMP .STAFF_MEMBER_READ_NAME
+	.NAME_TOO_LONG:
+		MOV RDI, str_len_ERR
+		CALL print_string_new
 	.STAFF_MEMBER_READ_NAME:
 		; Staff member's name
 		MOV RDI, str_prompt_staff_name ; prompts user to enter name
@@ -430,25 +439,47 @@ ADD_STAFF_MEMBER:
 		
 		CMP AL, 0 ; if empty, keep prompting user to enter one
 		JE .STAFF_MEMBER_READ_NAME
-		
+
+		MOV RBX, RAX
+		CALL STR_LEN
+		CMP RAX, 63 ; make sure strings are not bigger than 63B
+		JG .NAME_TOO_LONG ;get the fuck back there
+
 		MOV RSI, RAX ; address of new string into rsi
 		MOV RDI, RCX ; address of memory slot into rdi
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for first name
 		
+	POP RBX
+
+	PUSH RBX
+	JMP .STAFF_MEMBER_READ_SURNAME
+	.SURNAME_TOO_LONG:
+		MOV RDI, str_len_ERR
+		CALL print_string_new
+
 	.STAFF_MEMBER_READ_SURNAME:
 		; Staff member's surname
+		
 		MOV RDI, str_prompt_staff_surname
 		CALL print_string_new
 		CALL read_string_new
 		
 		CMP AL, 0
-		JE .STAFF_MEMBER_READ_NAME
+		JE .STAFF_MEMBER_READ_SURNAME
+
+		MOV RBX, RAX
+		CALL STR_LEN
+		CMP RAX, 63 ; make sure strings are not bigger than 63B
+		JG .SURNAME_TOO_LONG ;get the fuck back there
 		
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
+
+	POP RBX
+	
 	.STAFF_MEMBER_READ_ID:
 		; START BLOCK
 		PUSH RDX
@@ -1303,11 +1334,12 @@ PRINT_BADGER_RECORD:
 			PUSH RAX
 			PUSH RBX
 
+			; get year
 			MOVZX RDI, WORD[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon]
 			MOV RAX, current_year
 			SUB RAX, RDI ; Age = CurrentYear - BirthYear
-			; okay now we need to account for month of birth
 			
+			; get month
 			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex]
 			MOV RBX, current_month
 
