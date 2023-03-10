@@ -286,16 +286,19 @@ SECTION .bss
 SECTION .text
 
 STR_LEN:
+	; returns the length of a string
+	; input string is in rbx
+	; rax has output
     PUSH RCX
     PUSH RBX
     PUSH RDI
     SUB RCX, RCX
     NOT RCX				; MAX SIZE 
     MOV AL, 0 			; LOOK FOR THE NULL TERMINATOR
-    MOV RDI, RBX		; start of string
+    MOV RDI, RBX		; START OF STRING
     CLD
     REPNE SCASB			; search
-    SUB RDI, RBX		; REMOVE START OF STRING
+    SUB RDI, RBX		
     DEC RDI				; allow for the null terminator
     MOV RAX, RDI
     
@@ -307,6 +310,7 @@ STR_LEN:
 
 
 BIG_HONKING_WELCOME_MESSAGE:
+	; ASCII art of a badger
 	; START BLOCK
 	PUSH RDI
 	MOV RDI, str_badg_art
@@ -314,8 +318,8 @@ BIG_HONKING_WELCOME_MESSAGE:
 	POP RDI
 	RET
 	; END BLOCK
+
 STAFF_ID_FORMAT_CHECK_FUNCTION:
-	; gonna try splitting this out into it's own function
 	PUSH RSI
 	PUSH RAX
 	PUSH RBX
@@ -425,12 +429,7 @@ ADD_STAFF_MEMBER:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
 		INC RCX ; increment RCX by 1 byte
 		
-
 	PUSH RBX
-	JMP .STAFF_MEMBER_READ_NAME
-	.NAME_TOO_LONG:
-		MOV RDI, str_len_ERR
-		CALL print_string_new
 	.STAFF_MEMBER_READ_NAME:
 		; Staff member's name
 		MOV RDI, str_prompt_staff_name ; prompts user to enter name
@@ -439,47 +438,47 @@ ADD_STAFF_MEMBER:
 		
 		CMP AL, 0 ; if empty, keep prompting user to enter one
 		JE .STAFF_MEMBER_READ_NAME
-
+        PUSH RAX
 		MOV RBX, RAX
 		CALL STR_LEN
 		CMP RAX, 63 ; make sure strings are not bigger than 63B
-		JG .NAME_TOO_LONG ;get the fuck back there
+        POP RAX
+		JL .NAME_CORRECT
+		MOV RDI, str_len_ERR ; too long!
+		CALL print_string_new
+		JMP .STAFF_MEMBER_READ_NAME
 
+		.NAME_CORRECT:
 		MOV RSI, RAX ; address of new string into rsi
 		MOV RDI, RCX ; address of memory slot into rdi
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for first name
-		
 	POP RBX
-
 	PUSH RBX
-	JMP .STAFF_MEMBER_READ_SURNAME
-	.SURNAME_TOO_LONG:
-		MOV RDI, str_len_ERR
-		CALL print_string_new
-
 	.STAFF_MEMBER_READ_SURNAME:
 		; Staff member's surname
-		
 		MOV RDI, str_prompt_staff_surname
 		CALL print_string_new
 		CALL read_string_new
 		
 		CMP AL, 0
 		JE .STAFF_MEMBER_READ_SURNAME
-
+                
+        PUSH RAX
 		MOV RBX, RAX
 		CALL STR_LEN
 		CMP RAX, 63 ; make sure strings are not bigger than 63B
-		JG .SURNAME_TOO_LONG ;get the fuck back there
-		
+		POP RAX
+		JL .SURNAME_CORRECT
+		MOV RDI, str_len_ERR ; too long
+		CALL print_string_new
+		JMP .STAFF_MEMBER_READ_SURNAME
+		.SURNAME_CORRECT:
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
 		ADD RCX, size_name_string ;64B was reserved for surname
-
 	POP RBX
-	
 	.STAFF_MEMBER_READ_ID:
 		; START BLOCK
 		PUSH RDX
