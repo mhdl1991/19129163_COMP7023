@@ -1,4 +1,4 @@
-; Your system must be able to store the following information about badgers in the zoo:
+; BADGER RECORD STRUCTURE:
 ;	DELETED FLAG - 1B
 ;   Badger ID - 8B - b + 6 digits
 ;   Name (64 bit) - 64B
@@ -9,9 +9,9 @@
 ;   Month of birth - 1B
 ;   Year of birth  - 2B
 ;   Staff ID of assigned park keeper - 9B - p + 7 digits
-;  record size - 88 Bytes/Badger
+; record size - 89 Bytes/Badger
 
-; Your system must be able to store the following information about staff members in the zoo:
+; STAFF RECORD STRUCTURE:
 ;	DELETED FLAG - 1B
 ;   Surname 64B
 ;   First Name 64B
@@ -20,42 +20,41 @@
 ;   Starting annual salary in GBP  4B (whole GBP  only)
 ;   Year of joining 2B
 ;   Email address 64B
-; record size - 208 Bytes/Staffer
+; record size - 210 Bytes/Staffer
 
-; This include line is an absolute path to the I/O library. You may wish to change it to suit your own file system.
+; This include line is an absolute path to the I/O library.
 %INCLUDE "/home/malware/asm/joey_lib_io_v9_release.asm"
 
 GLOBAL main
 
 SECTION .data
 
-str_badg_art DB \
-"WELCOME TO JONNY'S NOCTURNAL ZOO.", 10,\
-"                                                                                        ",10,\
-"                    ████                                                                ",10, \
-"                  ██░░░░██                                                              ",10,\
-"              ████░░██████████              ████████████                                ",10,\
-"            ██    ░░░░░░░░░░░░██████████████░░░░░░░░░░░░████████████████                ",10,\
-"          ██    ░░░░░░      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              ",10,\
-"        ██    ██░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██            ",10,\
-"      ██    ░░░░            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██          ",10,\
-"    ██░░░░░░░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
-"    ██░░░░          ░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
-"      ██░░      ░░░░████  ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
-"        ████████████      ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
-"                            ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░░░████    ",10,\
-"                          ██░░░░░░░░░░░░░░░░░░████████░░░░░░░░░░░░░░░░░░██  ████░░██    ",10,\
-"                          ██░░░░░░░░████░░░░██        ██░░░░░░░░░░░░░░░░░░██    ██      ",10,\
-"                        ██░░░░░░░░██  ██░░░░░░██    ██░░░░░░░░████░░░░░░░░░░██          ",10,\
-"                        ██░░░░░░░░██    ██░░░░██    ██░░░░░░░░██  ██░░░░░░░░░░██        ",10,\
-"                      ██░░░░░░░░░░██  ██░░░░░░██      ██░░░░░░██    ██░░░░░░░░██        ",10,\
-"                    ██░░░░░░░░░░██    ██░░░░██      ██░░░░░░██      ██░░░░░░██          ",10,\
-"                      ██████████      ██████          ████████        ██████            ",10,\
-"                                                                                        ",10,0
+	str_badg_art DB \
+	"WELCOME TO JONNY'S NOCTURNAL ZOO.", 10,\
+	"                                                                                        ",10,\
+	"                    ████                                                                ",10, \
+	"                  ██░░░░██                                                              ",10,\
+	"              ████░░██████████              ████████████                                ",10,\
+	"            ██    ░░░░░░░░░░░░██████████████░░░░░░░░░░░░████████████████                ",10,\
+	"          ██    ░░░░░░      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              ",10,\
+	"        ██    ██░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██            ",10,\
+	"      ██    ░░░░            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██          ",10,\
+	"    ██░░░░░░░░          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+	"    ██░░░░          ░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+	"      ██░░      ░░░░████  ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+	"        ████████████      ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██        ",10,\
+	"                            ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░░░████    ",10,\
+	"                          ██░░░░░░░░░░░░░░░░░░████████░░░░░░░░░░░░░░░░░░██  ████░░██    ",10,\
+	"                          ██░░░░░░░░████░░░░██        ██░░░░░░░░░░░░░░░░░░██    ██      ",10,\
+	"                        ██░░░░░░░░██  ██░░░░░░██    ██░░░░░░░░████░░░░░░░░░░██          ",10,\
+	"                        ██░░░░░░░░██    ██░░░░██    ██░░░░░░░░██  ██░░░░░░░░░░██        ",10,\
+	"                      ██░░░░░░░░░░██  ██░░░░░░██      ██░░░░░░██    ██░░░░░░░░██        ",10,\
+	"                    ██░░░░░░░░░░██    ██░░░░██      ██░░░░░░██      ██░░░░░░██          ",10,\
+	"                      ██████████      ██████          ████████        ██████            ",10,\
+	"                                                                                        ",10,0
 
-	; variables for messages to user
-	
-	; main menu variables
+
+	; Main menu options displayed to user.
 	str_main_menu DB 10,\
 						"Main Menu", 10,\
 						" 1. Add Staff Member", 10,\
@@ -67,12 +66,19 @@ str_badg_art DB \
 						" 7. Search for Badger by ID", 10, \
 						" 8. Exit", 10,\
 						"Please Enter Option 1 - 8", 10, 0
+
+	; message displayed when the user exits a program
 	str_program_exit DB "Program exited normally.", 10, 0
+
+	; message that confirms which option the user selected
     str_option_selected DB "Option selected: ", 0
+
+	; message that plays if the user picks an invalid option
     str_invalid_option DB "Invalid option, please try again.", 10, 0				
 
-	; messages to show user when adding a staff member
-	str_prompt_staff_full DB "ERROR- Cannot add new staff member. Please delete existing staff member", 10, 0
+	
+
+	; prompts for data input to show user when adding a staff member
 	str_prompt_staff_wrong_dept DB "ERROR- Invalid value entered for Department ID"
 	str_prompt_staff_name DB "Please enter the staff member's name", 10, 0
 	str_prompt_staff_surname DB "Please enter the staff member's surname", 10, 0
@@ -85,32 +91,42 @@ str_badg_art DB \
 	str_prompt_staff_salary DB "Please enter their salary", 10, 0
 	str_prompt_staff_year DB "Which year did they join", 10, 0
 	str_prompt_staff_mail DB "What's their email address?", 10, \
-							"Emails should end in @jnz.co.uk", 10, 0
+							"(Emails should end in @jnz.co.uk)", 10, 0
 	
+	; strings for which department the staff member belongs to (represented in the staff record as a byte)
 	str_staff_dept_0 DB "Park Keeper", 0
 	str_staff_dept_1 DB "Gift Shop", 0
 	str_staff_dept_2 DB "Cafe", 0
 	str_staff_dept_ERR DB "Error!", 0
 	
+	; displays the total number of staff in the array
 	str_number_staff DB "Total number of Staff: ", 10, 0
 	
-	str_staff_email_len_ERR DB "Please enter only 63 characters.", 10,0
+	; tells the user that they cannot add more staff members
+	str_prompt_staff_full DB "ERROR- Cannot add new staff member. Please delete existing staff member", 10, 0
+	
+	; Error displayed when user enters a string that is too long (names, email are all maximum 64B (63 chars + terminator) )
+	str_len_ERR DB "Too long! keep it less than 63 characters", 10, 0
+
+	; Error message displayed when the email is in an incorrect format
 	str_staff_email_fmt_ERR DB "Emails should end in @jnz.co.uk", 10,0
 	
-	str_len_ERR DB "Too long! keep it less than 63B", 10, 0
-
+	
+	; Errors for the Staff and Badger IDs
 	str_staff_ID_len_ERR DB "Staff/Keeper ID should be 8 characters", 10, 0
 	str_badg_ID_len_ERR DB "Badger ID should be 7 characters", 10, 0
 
 
-	; delete staff member
+	; Error displayed when there are no Staff records to delete
 	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
+
+	; Prompts displayed when searching for a staff member by ID,
 	str_prompt_staff_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
 	str_disp_id_found DB "Staff member found!", 10, 0
 	str_disp_id_not_found DB "No staff member with this ID exists", 10, 0
 	
 	
-	; messages to show when displaying staff member data to user
+	; messages to show when displaying staff member record data to a user
 	str_disp_staff_name DB "Staffer Name: ", 0
 	str_disp_staff_id DB "Staffer ID: ", 0
 	str_disp_staff_start_salary DB "Starting Salary: ", 0
@@ -120,17 +136,18 @@ str_badg_art DB \
 	str_disp_staff_year_join DB "Year of Joining: ", 0
 	str_disp_staff_email DB "E-mail address: ", 0
 
-	
-	; messages to show user when adding a badger
+	; message displayed when the badger array is full
 	str_prompt_badg_full DB "ERROR- Cannot add new badger. Please delete existing badger", 10, 0
+
+	; messages to show user when adding a badger record
 	str_prompt_badg_name DB "Please enter the badger's name", 10, 0
 	str_prompt_badg_id DB "Please give the badger an ID number", 10, \
 						  "(should  be in format bXXXXXX where X is a digit from 0 to 9)", 10, 0
-	str_prompt_badg_home DB  "Which setting do they live in?", 10, \
+	str_prompt_badg_home DB  "Which sett do they live in?", 10, \
 							"0 - Settfield", 10, \
 							"1 - Badgerton", 10, \
 							"2 - Stripeville", 10, 0
-	str_prompt_badg_mass DB "How much does the badger weigh?", 10, 0
+	str_prompt_badg_mass DB "How much does the badger weigh (cannot be bigger than 255kg)?", 10, 0
 	str_prompt_badg_stripes DB "How many stripes does it have? (0 - 255)", 10, 0
 	str_prompt_badg_sex DB  "What sex is the badger?", 10, \
 							"0 - Male", 10, \
@@ -154,21 +171,24 @@ str_badg_art DB \
 	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, \
 								 "(should  be in format pXXXXXXX where X is a digit from 0 to 9)", 10, 0
 	
+	; prompt to enter a Badger ID to search for
 	str_prompt_find_badg_id DB "Please enter ID number of the badger you are looking for", 10, \
 						  "(should  be in format bXXXXXX where X is a digit from 0 to 9)", 10, 0
 
+	; the names of the different setts the badgers can live in, printed when viewing a badger record
 	str_badg_home_0 DB "Settfield", 10, 0
 	str_badg_home_1 DB "Badgerton", 10, 0
 	str_badg_home_2 DB "Stripeville", 10, 0
 	str_badg_home_ERR DB "Error!", 10, 0
 
+	; names of badger sexes.
 	str_badg_sex_0 DB "Male", 10, 0
 	str_badg_sex_1 DB "Female", 10, 0
 	str_badg_sex_2 DB "Intersex", 10, 0
 	str_badg_sex_ERR DB "Error!", 10, 0
 
 
-	; messages when displaying badger details to user
+	; messages used when displaying badger record data to the user
 	str_disp_badg_name DB "Badger Name: ", 0
 	str_disp_badg_id DB "Badger ID: ", 0
 	str_disp_badg_sett DB "Sett: ", 0
@@ -181,11 +201,12 @@ str_badg_art DB \
 	str_disp_badg_keeper DB "Keeper ID: ", 0
 
 
+	; displaying the total number of Badger records in the array
 	str_number_badg DB "Total number of Badgers: ", 10, 0
 
-	; delete badger
+	; messages displayed when deleting a badger
 	str_prompt_badg_empty DB "NO BADGERS?", 10, 0
-	str_prompt_badg_delete_id DB "Please enter the ID of the staff member you wish to delete.", 10, 0 ;
+	str_prompt_badg_delete_id DB "Please enter the ID of the badger you wish to delete.", 10, 0 ;
 	str_disp_badg_id_found DB "Badger found!", 10, 0
 	str_disp_badg_id_not_found DB "No badger with this ID exists", 10, 0
 	
@@ -634,7 +655,7 @@ ADD_STAFF_MEMBER:
 		JMP .EMAIL_TAKE_INPUT
 		
 		.EMAIL_LEN_ERR:
-		MOV RDI, str_staff_email_len_ERR
+		MOV RDI, str_len_ERR
 		CALL print_string_new
 		JMP .EMAIL_TAKE_INPUT
 
