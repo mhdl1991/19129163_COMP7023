@@ -519,7 +519,7 @@ ADD_STAFF_MEMBER:
 			CMP RAX, 1
 			JNE .EMAIL_FORMAT_ERR
 			
-		MOV RSI, RAX
+		MOV RSI, RBX
 		MOV RDI, RCX
 		CALL copy_string
 		ADD RCX, size_name_string 
