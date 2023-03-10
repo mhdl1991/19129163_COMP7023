@@ -64,7 +64,7 @@ str_badg_art DB \
 						" 4. Add Badger", 10,\
 						" 5. Delete Badger", 10,\
 						" 6. List All Badgers", 10, \
-						" 7. Search for Badger by assigned Staff ID", 10, \
+						" 7. Search for Badger by ID", 10, \
 						" 8. Exit", 10,\
 						"Please Enter Option 1 - 8", 10, 0
 	str_program_exit DB "Program exited normally.", 10, 0
@@ -145,7 +145,9 @@ str_badg_art DB \
 	str_prompt_badg_keeper_id DB "What is the ID of the badger's keeper", 10, \
 								 "(should  be in format pXXXXXXX where X is a digit from 0 to 9)", 10, 0
 	
-	
+	str_prompt_find_badg_id DB "Please enter ID number of the badger you are looking for", 10, \
+						  "(should  be in format bXXXXXX where X is a digit from 0 to 9)", 10, 0
+
 	str_badg_home_0 DB "Settfield", 10, 0
 	str_badg_home_1 DB "Badgerton", 10, 0
 	str_badg_home_2 DB "Stripeville", 10, 0
@@ -250,7 +252,6 @@ str_badg_art DB \
 	size_badg_yr EQU 4
 	; 9B staff ID
 	
-	badg_record_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; The total size of the badger comes out to around 89B 
 	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
 	
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
@@ -462,17 +463,30 @@ ADD_STAFF_MEMBER:
 		ADD RCX, size_salary ;8B
 	.STAFF_MEMBER_READ_YEAR_JOIN:
 		; Staff member year of joining
+		; should not be a value greater than current year
+		PUSH RBX
+		MOV RBX, current_year
+		.STAFF_YEAR_CHECK:
 		MOV RDI, str_prompt_staff_year
 		CALL print_string_new
 		CALL read_uint_new
+		CMP RAX, RBX
+		JG .STAFF_YEAR_CHECK
+
 		MOV RSI, RAX
 		MOV DWORD[RCX], EAX
 		ADD RCX, size_year ;4B
+		
+		POP RBX
 	.STAFF_MEMBER_READ_EMAIL:
 		; Staff member email address
 		MOV RDI, str_prompt_staff_mail
 		CALL print_string_new
 		CALL read_string_new
+		.EMAIL_FORMAT_CHECK:
+
+
+
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
@@ -686,12 +700,20 @@ ADD_BADGER:
 
 	.BADG_READ_YEAR:
 		; Badger year of birth
+		; should not be a value greater than current year
+		PUSH RBX
+		MOV RBX, current_year
+		.BADG_YEAR_CHECK:
 		MOV RDI, str_prompt_badg_birth_year
 		CALL print_string_new
 		CALL read_uint_new
+		CMP RAX, RBX
+		JG .BADG_YEAR_CHECK
+		
 		MOV RSI, RAX
 		MOV DWORD[RCX], EAX
 		ADD RCX, size_badg_yr ;4B
+		POP RBX
 
 	.BADG_READ_KEEPER_ID:
 		; Badger keeper
@@ -1376,7 +1398,7 @@ DELETE_BADGER:
 	RET
 	;END BLOCK
 	
-FIND_BADGER_BY_KEEPER_ID:
+FIND_BADGER_BY_ID:
 	; START BLOCK
 	; print out badger
 	PUSH RAX
@@ -1386,13 +1408,13 @@ FIND_BADGER_BY_KEEPER_ID:
 	PUSH RDI
 	PUSH RSI 
 
-	.READ_KEEPER_ID:
+	.READ_FIND_BADG_ID:
 		; Prompt user to input the ID of the badger they want to delete
-		MOV RDI, str_prompt_badg_keeper_id
+		MOV RDI, str_prompt_find_badg_id
 		CALL print_string_new
 		CALL read_string_new
 	
-	.SEARCH_BADG_BY_KEEPER:
+	.SEARCH_BADG_BY_ID:
 		; Put the string read from user into buff_generic
 		MOV RBX, buff_generic ; pointer to buff_generic, 
 		MOV RSI, RAX ; source- RAX
@@ -1410,20 +1432,20 @@ FIND_BADGER_BY_KEEPER_ID:
 				; FIRST BYTE IN RECORD IS DELETE FLAG
 				MOVZX  RDI, BYTE[RSI]
 				CMP RDI, 1
-				JNE .FIND_KEEPER_GOTO_NEXT_BADGER
+				JNE .FIND_BADG_GOTO_NEXT_BADGER
 
-			.BADG_FIND_CHECK_KEEPER_ID:
+			.BADG_FIND_CHECK_ID:
 				PUSH RBX
 				PUSH RSI
 				PUSH RDI
-				LEA RDI, [RSI + badg_record_keeper_id_offset]
+				LEA RDI, [RSI + size_delete_flag + size_name_string]
 				LEA RSI, [buff_generic]
 				CALL strings_are_equal
 				CMP RAX, 0 ;Keeper ID doesnt match input string
 				POP RDI
 				POP RSI 
 				POP RBX
-				JE .FIND_KEEPER_GOTO_NEXT_BADGER
+				JE .FIND_BADG_GOTO_NEXT_BADGER
 
 			.BADG_FOUND_PRINT_RECORD:
 				MOV RBX, 1
@@ -1432,7 +1454,7 @@ FIND_BADGER_BY_KEEPER_ID:
 				POP RAX
 				JMP .END_FIND_BADGER_THEN_PRINT_LOOP
 
-			.FIND_KEEPER_GOTO_NEXT_BADGER:
+			.FIND_BADG_GOTO_NEXT_BADGER:
 				ADD RSI, size_badg_record
 				ADD RCX, size_badg_record
 				CMP RCX, size_badg_array
@@ -1442,11 +1464,11 @@ FIND_BADGER_BY_KEEPER_ID:
 			;END LOOP
 		.END_FIND_BADGER_THEN_PRINT_LOOP:
 		CMP RBX, 1
-		JNE .BADG_KEEPER_ID_WASNT_FOUND
+		JNE .BADG_ID_WASNT_FOUND
 		MOV RDI, str_disp_badg_id_found
 		CALL print_string_new
 		CALL print_nl_new
-		.BADG_KEEPER_ID_WASNT_FOUND:
+		.BADG_ID_WASNT_FOUND:
 		MOV RDI, str_disp_badg_id_not_found
 		CALL print_string_new
 		CALL print_nl_new
@@ -1586,6 +1608,7 @@ main:
 		
 		.OPTION5: ;DELETE BADGER
 			; START BLOCK
+			; CHECK THAT THE BADGER ARRAY ISNT EMPTY
 			MOV RDX, [current_number_badg]
 			CMP RDX, 0
 			JG .BADG_HAS_RECORDS
@@ -1606,7 +1629,15 @@ main:
 		
 		.OPTION7:
 			; START BLOCK
-			CALL FIND_BADGER_BY_KEEPER_ID
+			MOV RDX, [current_number_badg]
+			CMP RDX, 0
+			JG .BADG_FIND_HAS_RECORDS
+			MOV RDI, str_prompt_badg_empty
+			CALL print_string_new
+			JMP .MENULOOP
+			.BADG_FIND_HAS_RECORDS:
+
+			CALL FIND_BADGER_BY_ID
 			JMP .MENULOOP
 			; END BLOCK
 		
