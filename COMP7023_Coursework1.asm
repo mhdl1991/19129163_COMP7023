@@ -208,7 +208,7 @@ str_badg_art DB \
 	str_mon_12 DB "Not a real month", 0 
 
 
-	str_email_check DB, "@jnz.co.uk", 0
+	str_email_check DB "@jnz.co.uk", 0
 
 
 	; IS_DELETED 1B
