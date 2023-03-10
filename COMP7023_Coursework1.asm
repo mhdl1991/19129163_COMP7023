@@ -641,7 +641,7 @@ ADD_BADGER:
 		MOV RDI, str_len_ERR
 		CALL print_string_new
 		JMP .BADG_READ_NAME
-		.BADG_NAME_CORRECT
+		.BADG_NAME_CORRECT:
 		MOV RSI, RAX ; RSI - address of new string
 		MOV RDI, RCX ; RDS - address of memory slot
 		CALL copy_string ; copy string to memory slot
@@ -656,7 +656,7 @@ ADD_BADGER:
 		CALL read_string_new ; get input from user
 
 		; TEST IF BADGER ID IS IN CORRECT FORMAT
-		.STAFF_ID_FORMAT_CHECK:
+		.BADG_ID_FORMAT_CHECK:
 		;START BLOCK
 			PUSH RSI
 			PUSH RAX
