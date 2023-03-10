@@ -1365,7 +1365,7 @@ PRINT_BADGER_RECORD:
 
 			CMP RBX, RDI ; (is currentMonth >= birthMonth)
 			JGE .DONTDECREMENT
-			DEC RAX ;if it is then decrement by 1
+			SUB RAX, 1 ;if it is then decrement by 1
 			.DONTDECREMENT:			
 			CALL print_uint_new
 			CALL print_nl_new
@@ -1530,7 +1530,7 @@ FIND_BADGER_BY_ID:
 
 		; Get the base address of the badgers array
 		LEA RSI, [arr_badgers] ; load base address of the badger array into RSI. In other words, RSI points to the staff array.
-		MOV RCX, 0
+		MOV RCX, 0 ; counter?
 		MOV RBX, 0 ; use this as a flag to show that the badger record has been found
 	
 		.FIND_BADGER_THEN_PRINT_LOOP:
