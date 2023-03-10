@@ -674,10 +674,10 @@ ADD_BADGER:
 
 			MOV RAX, QWORD[RBX] ;8 Bytes of string buffer moved onto RAX
 			.BADG_ID_FIRST_LETTER_CHECK:
-			CMP AL, 'b'
-			JNE .INCORRECT_BADG_ID ; MAKE SURE FIRST CHARACTER IS p
-			SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
-			
+				CMP AL, 'b'
+				JNE .INCORRECT_BADG_ID ; MAKE SURE FIRST CHARACTER IS p
+				SHR RAX, 8 ; MOVE TO THE NEXT CHARACTER
+				
 			; The next 6 characters must all be digits
 			MOV RCX, 6 ; counter to check next 7 characters
 			.BADG_ID_FORMAT_CHECK_LOOP:
@@ -693,14 +693,14 @@ ADD_BADGER:
 				JNE .BADG_ID_FORMAT_CHECK_LOOP  ; Next step in loop
 			;END LOOP
 			.BADG_ID_END_LOOP:
-			CMP AL, 0	; the last character must be a null terminator
-			JE .END_BADG_ID_FORMAT_CHECK
+				CMP AL, 0	; the last character must be a null terminator
+				JE .END_BADG_ID_FORMAT_CHECK
 			
 			.INCORRECT_BADG_ID:
-			MOV RDI, str_badg_id_ERR
-			CALL print_string_new
-			CALL print_nl_new
-			JMP .BADG_READ_ID
+				MOV RDI, str_badg_id_ERR
+				CALL print_string_new
+				CALL print_nl_new
+				JMP .BADG_READ_ID
 			
 			.END_BADG_ID_FORMAT_CHECK:
 			POP RCX
