@@ -621,6 +621,7 @@ ADD_BADGER:
 		MOV BYTE[RCX], 1 ; when this flag is set to 1 it means a record exists here.
 		INC RCX ; increment RCX by 1 byte
 
+	PUSH RBX
 	.BADG_READ_NAME:
 		; Badger name
 		MOV RDI, str_prompt_badg_name
@@ -629,10 +630,23 @@ ADD_BADGER:
 
 		CMP AL, 0
 		JE .BADG_READ_NAME
+
+		; LENGTH CHECK
+		PUSH RAX 
+		MOV RBX, RAX
+		CALL STR_LEN
+		CMP RAX, 63
+		POP RAX
+		JL .BADG_NAME_CORRECT
+		MOV RDI, str_len_ERR
+		CALL print_string_new
+		JMP .BADG_READ_NAME
+		.BADG_NAME_CORRECT
 		MOV RSI, RAX ; RSI - address of new string
 		MOV RDI, RCX ; RDS - address of memory slot
 		CALL copy_string ; copy string to memory slot
 		ADD RCX, size_name_string ; 64B was reserved for name
+	POP RBX
 
 	.BADG_READ_ID:
 		;START BLOCK
