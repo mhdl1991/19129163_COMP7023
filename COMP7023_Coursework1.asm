@@ -84,7 +84,8 @@ str_badg_art DB \
 							"2 - Cafe", 10, 0						
 	str_prompt_staff_salary DB "Please enter their salary", 10, 0
 	str_prompt_staff_year DB "Which year did they join", 10, 0
-	str_prompt_staff_mail DB "What's their email address?", 10, 0
+	str_prompt_staff_mail DB "What's their email address?", 10, \
+							"Emails should end in @jnz.co.uk", 10, 0
 	
 	str_staff_dept_0 DB "Park Keeper", 0
 	str_staff_dept_1 DB "Gift Shop", 0
@@ -94,6 +95,7 @@ str_badg_art DB \
 	str_number_staff DB "Total number of Staff: ", 10, 0
 	
 	str_staff_email_len_ERR DB "Please enter only 63 characters.", 10,0
+	str_staff_email_fmt_ERR DB "Emails should end in @jnz.co.uk", 10,0
 	
 	; delete staff member
 	str_prompt_staff_empty DB "There are no records to delete!", 10, 0
@@ -484,7 +486,6 @@ ADD_STAFF_MEMBER:
 		
 		POP RBX
 	.STAFF_MEMBER_READ_EMAIL:
-		PUSH RAX
 		PUSH RBX
 
 		JMP .EMAIL_TAKE_INPUT
@@ -495,31 +496,35 @@ ADD_STAFF_MEMBER:
 		JMP .EMAIL_TAKE_INPUT
 
 		.EMAIL_FORMAT_ERR:
+		MOV RDI, str_staff_email_fmt_ERR
+		CALL print_string_new
 
 		; Staff member email address
 		.EMAIL_TAKE_INPUT:
 		MOV RDI, str_prompt_staff_mail
 		CALL print_string_new
 		CALL read_string_new
+		
 		.EMAIL_FORMAT_CHECK:
+			; length check
+			MOV RBX, RAX
+			CALL string_length
+			CMP RAX, 63
+			JG .EMAIL_LEN_ERR
 
-		; length check
-		MOV RBX, RAX
-		CALL string_length
-		CMP RAX, 63
-		JG .EMAIL_LEN_ERR
-
-		MOV RSI, RBX
-		LEA RSI
-
-
+			MOV RSI, RBX
+			LEA RSI, [RBX + RAX - 10]
+			LEA RDI, [str_email_check]
+			CALL strings_are_equal
+			CMP RAX, 1
+			JNE .EMAIL_FORMAT_ERR
+			
 		MOV RSI, RAX
 		MOV RDI, RCX
 		CALL copy_string
 		ADD RCX, size_name_string 
 
 		POP RBX
-		POP RAX
 
 	; FINALLY ADDED ALL THE STAFF DETAILS
 
