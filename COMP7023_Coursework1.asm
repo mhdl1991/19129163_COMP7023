@@ -250,6 +250,7 @@ str_badg_art DB \
 	size_badg_yr EQU 4
 	; 9B staff ID
 	
+	badg_record_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; The total size of the badger comes out to around 89B 
 	size_badg_record EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr +size_staff_id ; The total size of the badger comes out to around 89B
 	
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
@@ -268,6 +269,7 @@ str_badg_art DB \
 
 SECTION .bss
 	arr_staff_members: RESB size_staff_array; 210B/staff, 100 maximum staff members
+	YOINK: RESB size_name_string ; ???
 	arr_badgers: RESB size_badg_array ; 88B/badger, 500 maximum badgers
 	buff_generic: RESB size_name_string ; used for testing IDs. maybe don't need to make it big
 SECTION .text
@@ -967,267 +969,255 @@ DELETE_STAFF:
 	RET
 	;END BLOCK	
 
-LIST_BADGERS:
+PRINT_BADGER_RECORD:
 	;START BLOCK
-	;Takes no parameters (badgers array is global)
+	;RSI IS PARAMETER
 	PUSH RBX
 	PUSH RCX
 	PUSH RDX
 	PUSH RDI
 	PUSH RSI
-
-	LEA RSI, [arr_badgers]
-	MOV RCX, 0
-
-	.START_PRINT_BADG_LOOP:
+	.PRINT_BADG_NAME:
+		MOV RDI, str_disp_badg_name
+		CALL print_string_new
+		CALL print_nl_new
+		LEA RDI, [RSI + size_delete_flag]
+		CALL print_string_new
+		CALL print_nl_new
+	.PRINT_BADG_ID:
+		MOV RDI, str_disp_badg_id
+		CALL print_string_new
+		CALL print_nl_new
+		LEA RDI, [RSI + size_delete_flag + size_name_string]
+		CALL print_string_new
+		CALL print_nl_new
+	.PRINT_BADG_HOME:
 		;START BLOCK
-		; print data out in order they were added to the record.
-		.CHECK_BADG_DELETE_FLAG:
-			MOVZX RDI, BYTE[RSI]
-			CMP RDI, 1
-			JNE .GOTO_NEXT_BADG
-			CALL print_nl_new
-		.PRINT_BADG_NAME:
-			MOV RDI, str_disp_badg_name
-			CALL print_string_new
-			CALL print_nl_new
-			LEA RDI, [RSI + size_delete_flag]
-			CALL print_string_new
-		.PRINT_BADG_ID:
-			MOV RDI, str_disp_badg_id
-			CALL print_string_new
-			CALL print_nl_new
-			LEA RDI, [RSI + size_delete_flag + size_name_string]
-			CALL print_string_new
-		.PRINT_BADG_HOME:
-			;START BLOCK
-			MOV RDI, str_disp_badg_sett
-			CALL print_string_new
-			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id]
-			
-			.BADG_SETT_0:
-			CMP RDI, 0
-			JNE .BADG_SETT_1
-			PUSH RDI
-			MOV RDI, str_badg_home_0
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_HOME
+		MOV RDI, str_disp_badg_sett
+		CALL print_string_new
+		MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id]
+		
+		.BADG_SETT_0:
+		CMP RDI, 0
+		JNE .BADG_SETT_1
+		PUSH RDI
+		MOV RDI, str_badg_home_0
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_HOME
 
-			.BADG_SETT_1:
-			CMP RDI, 1
-			JNE .BADG_SETT_2
-			PUSH RDI
-			MOV RDI, str_badg_home_1
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_HOME
-			
-			.BADG_SETT_2:
-			CMP RDI, 2
-			JNE .BADG_SETT_ERR
-			PUSH RDI
-			MOV RDI, str_badg_home_2
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_HOME
-			
-			.BADG_SETT_ERR:
-			PUSH RDI
-			MOV RDI, str_badg_home_ERR
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_HOME
-			;END BLOCK
-		.END_PRINT_BADG_HOME:
+		.BADG_SETT_1:
+		CMP RDI, 1
+		JNE .BADG_SETT_2
+		PUSH RDI
+		MOV RDI, str_badg_home_1
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_HOME
+		
+		.BADG_SETT_2:
+		CMP RDI, 2
+		JNE .BADG_SETT_ERR
+		PUSH RDI
+		MOV RDI, str_badg_home_2
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_HOME
+		
+		.BADG_SETT_ERR:
+		PUSH RDI
+		MOV RDI, str_badg_home_ERR
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_HOME
+		;END BLOCK
+	.END_PRINT_BADG_HOME:
+	CALL print_nl_new
+	.PRINT_BADG_MASS:
+		MOV RDI, str_disp_badg_mass
+		CALL print_string_new
+		MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
+		CALL print_uint_new
 		CALL print_nl_new
-		.PRINT_BADG_MASS:
-			MOV RDI, str_disp_badg_mass
-			CALL print_string_new
-			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
-			CALL print_uint_new
-			CALL print_nl_new
-		.PRINT_BADG_STRIPES:
-			MOV RDI, str_disp_badg_stripes
-			CALL print_string_new
-			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
-			CALL print_uint_new
-			CALL print_nl_new
-		.PRINT_BADG_STRIPINESS:
-			MOV RDI, str_disp_badg_stripiness
-			CALL print_string_new
-			; Calculate stripiness
-			MOVZX RAX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
-			MOVZX RBX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
-			MUL RBX
-			MOV RDI, RAX
-			CALL print_uint_new
-			CALL print_nl_new
-		.PRINT_BADG_SEX:
-			MOV RDI, str_disp_badg_sex
-			CALL print_string_new
-			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes]
-			
-			.BADG_SEX_0:
-			CMP RDI, 0
-			JNE .BADG_SEX_1 
-			PUSH RDI
-			MOV RDI, str_badg_sex_0
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_SEX
-			
-			.BADG_SEX_1:
-			CMP RDI, 1	
-			JNE .BADG_SEX_2
-			PUSH RDI
-			MOV RDI, str_badg_sex_1
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_SEX
-			
-			.BADG_SEX_2:
-			CMP RDI, 2
-			JNE .BADG_SEX_ERR
-			PUSH RDI
-			MOV RDI, str_badg_sex_2
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_SEX
-			
-			.BADG_SEX_ERR:
-			PUSH RDI
-			MOV RDI, str_badg_sex_ERR
-			CALL print_string_new
-			POP RDI
-			JMP .END_PRINT_BADG_SEX
-		.END_PRINT_BADG_SEX:
+	.PRINT_BADG_STRIPES:
+		MOV RDI, str_disp_badg_stripes
+		CALL print_string_new
+		MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
+		CALL print_uint_new
 		CALL print_nl_new
-		.PRINT_BADG_DOB:
-			; Print month and year together
-			MOV RDI, str_disp_badg_born
+	.PRINT_BADG_STRIPINESS:
+		MOV RDI, str_disp_badg_stripiness
+		CALL print_string_new
+		; Calculate stripiness
+		MOVZX RAX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home]
+		MOVZX RBX, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass]
+		MUL RBX
+		MOV RDI, RAX
+		CALL print_uint_new
+		CALL print_nl_new
+	.PRINT_BADG_SEX:
+		MOV RDI, str_disp_badg_sex
+		CALL print_string_new
+		MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes]
+		
+		.BADG_SEX_0:
+		CMP RDI, 0
+		JNE .BADG_SEX_1 
+		PUSH RDI
+		MOV RDI, str_badg_sex_0
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_SEX
+		
+		.BADG_SEX_1:
+		CMP RDI, 1	
+		JNE .BADG_SEX_2
+		PUSH RDI
+		MOV RDI, str_badg_sex_1
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_SEX
+		
+		.BADG_SEX_2:
+		CMP RDI, 2
+		JNE .BADG_SEX_ERR
+		PUSH RDI
+		MOV RDI, str_badg_sex_2
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_SEX
+		
+		.BADG_SEX_ERR:
+		PUSH RDI
+		MOV RDI, str_badg_sex_ERR
+		CALL print_string_new
+		POP RDI
+		JMP .END_PRINT_BADG_SEX
+	.END_PRINT_BADG_SEX:
+	CALL print_nl_new
+	.PRINT_BADG_DOB:
+		; Print month and year together
+		MOV RDI, str_disp_badg_born
+		CALL print_string_new
+		CALL print_nl_new
+
+		.PRINT_BADG_DOB_MONTH:
+			MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex]
+			CMP RDI, 12
+			JG .PRINT_MON_ERR
+			CMP RDI, 0
+			JL .PRINT_MON_ERR
+			.PRINT_JANUARY:
+			CMP RDI, 0
+			JNE .PRINT_FEBRUARY
+			PUSH RDI
+			MOV RDI, str_mon_0
 			CALL print_string_new
-			CALL print_nl_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_FEBRUARY:
+			CMP RDI, 1
+			JNE .PRINT_MARCH
+			PUSH RDI
+			MOV RDI, str_mon_1
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_MARCH:
+			CMP RDI, 2
+			JNE .PRINT_APRIL
+			PUSH RDI
+			MOV RDI, str_mon_2
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_APRIL:
+			CMP RDI, 3
+			JNE .PRINT_MAY
+			PUSH RDI
+			MOV RDI, str_mon_3
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_MAY:
+			CMP RDI, 4
+			JNE .PRINT_JUNE
+			PUSH RDI
+			MOV RDI, str_mon_4
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_JUNE:
+			CMP RDI, 5
+			JNE .PRINT_JULY
+			PUSH RDI
+			MOV RDI, str_mon_5
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_JULY:
+			CMP RDI, 6
+			JNE .PRINT_AUGUST
+			PUSH RDI
+			MOV RDI, str_mon_6
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_AUGUST:
+			CMP RDI, 7
+			JNE .PRINT_SEPTEMBER
+			PUSH RDI
+			MOV RDI, str_mon_7
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_SEPTEMBER:
+			CMP RDI, 8
+			JNE .PRINT_OCTOBER
+			PUSH RDI
+			MOV RDI, str_mon_8
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_OCTOBER:
+			CMP RDI, 9
+			JNE .PRINT_NOVEMBER
+			PUSH RDI
+			MOV RDI, str_mon_9
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_NOVEMBER:
+			CMP RDI, 10
+			JNE .PRINT_DECEMBER
+			PUSH RDI
+			MOV RDI, str_mon_10
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_DECEMBER:
+			CMP RDI, 11
+			JNE .PRINT_MON_ERR
+			PUSH RDI
+			MOV RDI, str_mon_11
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+			.PRINT_MON_ERR:
+			PUSH RDI
+			MOV RDI, str_mon_12
+			CALL print_string_new
+			POP RDI
+			JMP .END_PRINT_BADG_DOB_MONTH
+		.END_PRINT_BADG_DOB_MONTH:
+		;PRINT A SPACE
+		MOV RDI, ' '
+		CALL print_char_new
 
-			.PRINT_BADG_DOB_MONTH:
-				MOVZX RDI, BYTE[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex]
-				CMP RDI, 12
-				JG .PRINT_MON_ERR
-				CMP RDI, 0
-				JL .PRINT_MON_ERR
-				.PRINT_JANUARY:
-				CMP RDI, 0
-				JNE .PRINT_FEBRUARY
-				PUSH RDI
-				MOV RDI, str_mon_0
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_FEBRUARY:
-				CMP RDI, 1
-				JNE .PRINT_MARCH
-				PUSH RDI
-				MOV RDI, str_mon_1
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_MARCH:
-				CMP RDI, 2
-				JNE .PRINT_APRIL
-				PUSH RDI
-				MOV RDI, str_mon_2
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_APRIL:
-				CMP RDI, 3
-				JNE .PRINT_MAY
-				PUSH RDI
-				MOV RDI, str_mon_3
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_MAY:
-				CMP RDI, 4
-				JNE .PRINT_JUNE
-				PUSH RDI
-				MOV RDI, str_mon_4
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_JUNE:
-				CMP RDI, 5
-				JNE .PRINT_JULY
-				PUSH RDI
-				MOV RDI, str_mon_5
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_JULY:
-				CMP RDI, 6
-				JNE .PRINT_AUGUST
-				PUSH RDI
-				MOV RDI, str_mon_6
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_AUGUST:
-				CMP RDI, 7
-				JNE .PRINT_SEPTEMBER
-				PUSH RDI
-				MOV RDI, str_mon_7
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_SEPTEMBER:
-				CMP RDI, 8
-				JNE .PRINT_OCTOBER
-				PUSH RDI
-				MOV RDI, str_mon_8
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_OCTOBER:
-				CMP RDI, 9
-				JNE .PRINT_NOVEMBER
-				PUSH RDI
-				MOV RDI, str_mon_9
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_NOVEMBER:
-				CMP RDI, 10
-				JNE .PRINT_DECEMBER
-				PUSH RDI
-				MOV RDI, str_mon_10
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_DECEMBER:
-				CMP RDI, 11
-				JNE .PRINT_MON_ERR
-				PUSH RDI
-				MOV RDI, str_mon_11
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-				.PRINT_MON_ERR:
-				PUSH RDI
-				MOV RDI, str_mon_12
-				CALL print_string_new
-				POP RDI
-				JMP .END_PRINT_BADG_DOB_MONTH
-			.END_PRINT_BADG_DOB_MONTH:
-			
-			;PRINT A SPACE
-			MOV RDI, ' '
-			CALL print_char_new
-
-			.PRINT_BADG_DOB_YEAR:
+		.PRINT_BADG_DOB_YEAR:
 			MOV EDI, [RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon]
 			CALL print_uint_new
 			CALL print_nl_new
-
 		.END_PRINT_BADG_DOB:
 		.PRINT_BADG_AGE:
 			; Oh boy this is gonna SUCK
@@ -1257,6 +1247,38 @@ LIST_BADGERS:
 			CALL print_string_new
 			LEA RDI, [RSI + size_delete_flag + size_name_string +size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr]
 			CALL print_string_new
+			CALL print_nl_new
+	POP RSI
+	POP RDI
+	POP RDX
+	POP RCX
+	POP RBX
+	RET
+	;END BLOCK
+
+LIST_BADGERS:
+	;START BLOCK
+	;Takes no parameters (badgers array is global)
+	PUSH RBX
+	PUSH RCX
+	PUSH RDX
+	PUSH RDI
+	PUSH RSI
+
+	LEA RSI, [arr_badgers]
+	MOV RCX, 0
+	; Move function for printing badger records to an external function?
+
+	.START_PRINT_BADG_LOOP:
+		;START BLOCK
+		; print data out in order they were added to the record.
+		.CHECK_BADG_DELETE_FLAG:
+			MOVZX RDI, BYTE[RSI]
+			CMP RDI, 1
+			JNE .GOTO_NEXT_BADG
+			CALL print_nl_new
+
+		CALL PRINT_BADGER_RECORD
 		.GOTO_NEXT_BADG:
 			ADD RSI, size_badg_record
 			ADD RCX, size_badg_record
@@ -1354,7 +1376,90 @@ DELETE_BADGER:
 	RET
 	;END BLOCK
 	
+FIND_BADGER_BY_KEEPER_ID:
+	; START BLOCK
+	; print out badger
+	PUSH RAX
+	PUSH RBX
+	PUSH RCX
+	PUSH RDX
+	PUSH RDI
+	PUSH RSI 
 
+	.READ_KEEPER_ID:
+		; Prompt user to input the ID of the badger they want to delete
+		MOV RDI, str_prompt_badg_keeper_id
+		CALL print_string_new
+		CALL read_string_new
+	
+	.SEARCH_BADG_BY_KEEPER:
+		; Put the string read from user into buff_generic
+		MOV RBX, buff_generic ; pointer to buff_generic, 
+		MOV RSI, RAX ; source- RAX
+		MOV RDI, RBX ; dest- buff_generic
+		CALL copy_string ;copy string from RAX into buff_generic
+
+		; Get the base address of the badgers array
+		LEA RSI, [arr_badgers] ; load base address of the badger array into RSI. In other words, RSI points to the staff array.
+		MOV RCX, 0
+		MOV RBX, 0 ; use this as a flag to show that the badger record has been found
+	
+		.FIND_BADGER_THEN_PRINT_LOOP:
+			;START LOOP
+			.BADG_FIND_ID_IS_RECORD_DELETED:
+				; FIRST BYTE IN RECORD IS DELETE FLAG
+				MOVZX  RDI, BYTE[RSI]
+				CMP RDI, 1
+				JNE .FIND_KEEPER_GOTO_NEXT_BADGER
+
+			.BADG_FIND_CHECK_KEEPER_ID:
+				PUSH RBX
+				PUSH RSI
+				PUSH RDI
+				LEA RDI, [RSI + badg_record_keeper_id_offset]
+				LEA RSI, [buff_generic]
+				CALL strings_are_equal
+				CMP RAX, 0 ;Keeper ID doesnt match input string
+				POP RDI
+				POP RSI 
+				POP RBX
+				JE .FIND_KEEPER_GOTO_NEXT_BADGER
+
+			.BADG_FOUND_PRINT_RECORD:
+				MOV RBX, 1
+				PUSH RAX
+				CALL PRINT_BADGER_RECORD
+				POP RAX
+				JMP .END_FIND_BADGER_THEN_PRINT_LOOP
+
+			.FIND_KEEPER_GOTO_NEXT_BADGER:
+				ADD RSI, size_badg_record
+				ADD RCX, size_badg_record
+				CMP RCX, size_badg_array
+				JG .END_FIND_BADGER_THEN_PRINT_LOOP
+				JMP .FIND_BADGER_THEN_PRINT_LOOP
+
+			;END LOOP
+		.END_FIND_BADGER_THEN_PRINT_LOOP:
+		CMP RBX, 1
+		JNE .BADG_KEEPER_ID_WASNT_FOUND
+		MOV RDI, str_disp_badg_id_found
+		CALL print_string_new
+		CALL print_nl_new
+		.BADG_KEEPER_ID_WASNT_FOUND:
+		MOV RDI, str_disp_badg_id_not_found
+		CALL print_string_new
+		CALL print_nl_new
+
+	.BADG_ID_FIND_POST:
+	RET
+	POP RSI 
+	POP RDI
+	POP RDX
+	POP RCX
+	POP RBX
+	POP RAX
+	; END BLOCK
 
 MAIN_MENU_OPTIONS_PROMPT:
     PUSH RDI
@@ -1392,7 +1497,6 @@ main:
 		SUB RSP, 32
 
 	CALL BIG_HONKING_WELCOME_MESSAGE
-
 	.MENULOOP:
 		; START BLOCK
 		; Call the main menu options
@@ -1502,7 +1606,8 @@ main:
 		
 		.OPTION7:
 			; START BLOCK
-				JMP .MENULOOP
+			CALL FIND_BADGER_BY_KEEPER_ID
+			JMP .MENULOOP
 			; END BLOCK
 		
 		.OPTION8:  ;EXIT
