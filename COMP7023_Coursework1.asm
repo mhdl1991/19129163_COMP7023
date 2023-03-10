@@ -99,8 +99,8 @@ str_badg_art DB \
 	
 	str_len_ERR DB "Too long! keep it less than 63B", 10, 0
 
-	str_staff_ID_len_ERR DB "Staff ID should be 8 characters", 10, 0
-	str_badg_ID_len_ERR DB "Staff ID should be 7 characters", 10, 0
+	str_staff_ID_len_ERR DB "Staff/Keeper ID should be 8 characters", 10, 0
+	str_badg_ID_len_ERR DB "Badger ID should be 7 characters", 10, 0
 
 
 	; delete staff member
