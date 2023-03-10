@@ -1575,19 +1575,20 @@ FIND_BADGER_BY_ID:
 		MOV RDI, str_disp_badg_id_found
 		CALL print_string_new
 		CALL print_nl_new
+		JMP .BADG_ID_FIND_POST
 		.BADG_ID_WASNT_FOUND:
 		MOV RDI, str_disp_badg_id_not_found
 		CALL print_string_new
 		CALL print_nl_new
 
 	.BADG_ID_FIND_POST:
-	RET
 	POP RSI 
 	POP RDI
 	POP RDX
 	POP RCX
 	POP RBX
 	POP RAX
+	RET
 	; END BLOCK
 
 MAIN_MENU_OPTIONS_PROMPT:
