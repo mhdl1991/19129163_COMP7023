@@ -292,8 +292,8 @@ SECTION .data
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
 	; these were constants but are now user inputs
-	; current_year EQU 2023 	; for current salary calculation
-	; current_month EQU 2 		; for badger age calculation
+	current_year DQ 0	 		; for current salary calculation
+	current_month DQ 0			; for badger age calculation
 	max_number_staff EQU 100 	; maximum number of staff records
 	max_number_badg EQU 500 	; maximum number of badger records
 	
@@ -305,9 +305,6 @@ SECTION .data
 	current_number_badg DQ 0 ;keep track of badgers
 
 SECTION .bss
-	; user-inputted current month and year
-	current_year: RESB 4
-	current_month: RESB 1
 	; array for holding staff member records
 	arr_staff_members: RESB size_staff_array
 	; this was placed just in case. 
@@ -1016,7 +1013,7 @@ LIST_STAFF:
 			PUSH RDX
 
 			MOVZX RDI, WORD[RSI + staff_record_year_offset] 	; year joined stored here
-			MOV RAX, current_year	 							; current year
+			MOV RAX, QWORD[current_year]						; current year
 			SUB RAX, RDI 										; if year joining  < current year, this should be positive
 			IMUL RAX, 200 										; bonus to salary stored in RAX
 			
@@ -1403,7 +1400,7 @@ PRINT_BADGER_RECORD:
 			PUSH RBX
 
 			MOVZX RDI, WORD[RSI + size_delete_flag + size_name_string + size_badg_id + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon]
-			MOV RAX, current_year
+			MOV RAX, QWORD[current_year]
 			SUB RAX, RDI 											; Age = CurrentYear - BirthYear
 			
 																	; get month
