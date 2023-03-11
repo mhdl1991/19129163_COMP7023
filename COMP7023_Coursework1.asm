@@ -291,8 +291,9 @@ SECTION .data
 	; Offset for getting Badger keeper ID from Badger record address
 	badg_keeper_id_offset EQU size_delete_flag + size_badg_id + size_name_string + size_badg_home + size_badg_mass + size_badg_stripes + size_badg_sex + size_badg_mon + size_badg_yr ; gives you the ID of the keeper
 	
-	current_year DW 2023 		; for current salary calculation
-	current_month DB 2 			; for badger age calculation
+	; these were constants but are now user inputs
+	; current_year EQU 2023 	; for current salary calculation
+	; current_month EQU 2 		; for badger age calculation
 	max_number_staff EQU 100 	; maximum number of staff records
 	max_number_badg EQU 500 	; maximum number of badger records
 	
@@ -302,14 +303,11 @@ SECTION .data
 
 	current_number_staff DQ 0 ;keep track of staff
 	current_number_badg DQ 0 ;keep track of badgers
-	
-	; user-inputted current month and year
-	; default values of 2023 and January
-	;c_year DQ 2023
-	;c_month DB 0
 
 SECTION .bss
-
+	; user-inputted current month and year
+	current_year: RESB 4
+	current_month: RESB 1
 	; array for holding staff member records
 	arr_staff_members: RESB size_staff_array
 	; this was placed just in case. 
