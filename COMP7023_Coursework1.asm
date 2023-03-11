@@ -1018,8 +1018,8 @@ LIST_STAFF:
 			PUSH RDX
 
 			MOVZX RDI, WORD[RSI + staff_record_year_offset] 	; year joined stored here
-			MOV RAX, current_year 								; current year assumed to be 2023
-			SUB RAX, RDI 										; if year joining  < current year (2023), this should be positive
+			MOV RAX, current_year	 							; current year
+			SUB RAX, RDI 										; if year joining  < current year, this should be positive
 			IMUL RAX, 200 										; bonus to salary stored in RAX
 			
 			MOVZX RDI, WORD[RSI + staff_record_salary_offset] 	; base salary stored here
