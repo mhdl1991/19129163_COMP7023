@@ -95,7 +95,7 @@ SECTION .data
     str_invalid_option DB "Invalid option, please try again.", 10, 0				
 
 	; prompts for data input to show user when adding a staff member
-	str_prompt_staff_wrong_dept DB "ERROR- Invalid value entered for Department ID"
+	str_prompt_staff_wrong_dept DB "ERROR- Invalid value entered for Department ID", 10, 0
 	str_prompt_staff_name DB "Please enter the staff member's name", 10, 0
 	str_prompt_staff_surname DB "Please enter the staff member's surname", 10, 0
 	str_prompt_staff_id DB "Please enter the staff member's ID", 10, \
