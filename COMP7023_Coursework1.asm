@@ -225,7 +225,7 @@ SECTION .data
 	str_number_badg DB "Total number of Badgers: ", 10, 0
 
 	; messages displayed when deleting a badger
-	str_prompt_badg_empty DB "NO BADGERS?", 10, 0
+	str_prompt_badg_empty DB "There are no badgers to delete", 10, 0
 	str_prompt_badg_delete_id DB "Please enter the ID of the badger you wish to delete.", 10, 0 ;
 	str_disp_badg_id_found DB "Badger found!", 10, 0
 	str_disp_badg_id_not_found DB "No badger with this ID exists", 10, 0
@@ -653,7 +653,7 @@ ADD_STAFF_MEMBER:
 	.STAFF_MEMBER_READ_YEAR_JOIN:
 		; Staff member year of joining
 		PUSH RBX
-		MOV RBX, current_year
+		MOV RBX, QWORD[current_year]
 		.STAFF_YEAR_CHECK:
 		MOV RDI, str_prompt_staff_year			; prompt user to enter a year
 		CALL print_string_new
@@ -854,7 +854,7 @@ ADD_BADGER:										; Adds a new badger into the badger array
 		CMP RAX, 12 											; 0 - 11 valid values for months
 		JL .BADG_MON_NOERR
 		.BADG_MON_ERR:
-			MOV RDI, str_prompt_badg_wrong_sex
+			MOV RDI, str_prompt_badg_wrong_mon
 			CALL print_string_new
 			JMP .BADG_READ_MONTH
 		.BADG_MON_NOERR:
@@ -864,7 +864,7 @@ ADD_BADGER:										; Adds a new badger into the badger array
 
 	.BADG_READ_YEAR:
 		PUSH RBX
-		MOV RBX, current_year
+		MOV RBX, QWORD[current_year]
 		.BADG_YEAR_CHECK:
 		MOV RDI, str_prompt_badg_birth_year						; prompt user for badger year of birth
 		CALL print_string_new
@@ -1679,6 +1679,7 @@ GET_CURRENT_MONTH_AND_YEAR:
 	;END BLOCK
 
 main:
+    mov rbp, rsp; for correct debugging
 	;START BLOCK
 	MOV RBP, RSP														; correct debugging and windows compat
 	PUSH RBP
@@ -1735,7 +1736,7 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION2: ;DELETE STAFF MEMBER
+		.OPTION2: 														; User selected delete staff member
 			; START BLOCK
 			MOV RDX, [current_number_staff]
 			CMP RDX, 0
@@ -1748,7 +1749,7 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 			
-		.OPTION3: ;LIST STAFF MEMBERS
+		.OPTION3: 														; User selected list staff members
 			; START BLOCK
 			CALL PRINT_NUMBER_STAFF
 			CALL print_nl_new
@@ -1756,7 +1757,7 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION4: ;ADD BADGER
+		.OPTION4: 														; User selected add Badger
 			; START BLOCK
 			; CHECK THAT THE STAFF MEMBER ARRAY ISN'T FULL
 			MOV RDX, [current_number_badg]
@@ -1771,7 +1772,7 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION5: ;DELETE BADGER
+		.OPTION5: 														; User selected Delete Badgers
 			; START BLOCK
 			; CHECK THAT THE BADGER ARRAY ISNT EMPTY
 			MOV RDX, [current_number_badg]
@@ -1785,15 +1786,16 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION6: ; LIST BADGERS
+		.OPTION6: 														; User selected List Badgers
 			; START BLOCK
+			CALL PRINT_NUMBER_BADG
 			CALL print_nl_new
 			CALL LIST_BADGERS
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION7:
-			; START BLOCK
+		.OPTION7:                                                         ; User selected "Find Badger by ID"
+			; START BLOCK                                            
 			MOV RDX, [current_number_badg]
 			CMP RDX, 0
 			JG .BADG_FIND_HAS_RECORDS
@@ -1806,17 +1808,15 @@ main:
 			JMP .MENULOOP
 			; END BLOCK
 		
-		.OPTION8:  ;EXIT
+		.OPTION8:                                                                     ; User selected exit the program
 		; START BLOCK
 		MOV RDI, str_program_exit
 		CALL print_string_new
 		; END BLOCK
 	
-	.FINISH_MAIN_FUNCTION:
+	.FINISH_MAIN_FUNCTION:                                                 ; Undo the stack
 		; START BLOCK
-		; compatability boilerplate 2: electric boogaloo
-		; undo the stack
-		XOR RAX, RAX ; return zero
+		XOR RAX, RAX 
 		ADD RSP, 32
 		POP RBP
 		RET ; End function main
